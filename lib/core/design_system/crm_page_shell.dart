@@ -29,7 +29,6 @@ class CrmPageShell extends StatelessWidget {
       child: SafeArea(
         child: Column(
           children: <Widget>[
-         
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
               child: Row(

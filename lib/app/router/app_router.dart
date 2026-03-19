@@ -5,7 +5,11 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/design_system/app_colors.dart';
 import '../../features/ai_assistant/presentation/pages/ai_assistant_page.dart';
+import '../../features/customers/presentation/pages/customer_details_page.dart';
+import '../../features/customers/presentation/pages/customers_page.dart';
 import '../../features/dashboard/presentation/pages/dashboard_page.dart';
+import '../../features/leads/presentation/pages/lead_details_page.dart';
+import '../../features/leads/presentation/pages/leads_page.dart';
 import '../../features/opportunities/presentation/pages/pipeline_page.dart';
 
 part 'app_router.g.dart';
@@ -31,8 +35,43 @@ GoRouter appRouter(Ref ref) {
           StatefulShellBranch(
             routes: <RouteBase>[
               GoRoute(
+                path: '/leads',
+                builder: (context, state) => const LeadsPage(),
+                routes: <RouteBase>[
+                  GoRoute(
+                    path: ':leadId',
+                    builder: (context, state) {
+                      final leadId = state.pathParameters['leadId'] ?? '';
+                      return LeadDetailsPage(leadId: leadId);
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: <RouteBase>[
+              GoRoute(
                 path: '/pipeline',
                 builder: (context, state) => const PipelinePage(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: <RouteBase>[
+              GoRoute(
+                path: '/customers',
+                builder: (context, state) => const CustomersPage(),
+                routes: <RouteBase>[
+                  GoRoute(
+                    path: ':customerId',
+                    builder: (context, state) {
+                      final customerId =
+                          state.pathParameters['customerId'] ?? '';
+                      return CustomerDetailsPage(customerId: customerId);
+                    },
+                  ),
+                ],
               ),
             ],
           ),
@@ -89,7 +128,7 @@ class _ShellScaffold extends StatelessWidget {
                     colors: <Color>[AppColors.blackSoft, AppColors.black],
                   ),
                   borderRadius: BorderRadius.only(
-                    topRight: Radius.circular(34),
+                    topRight: Radius.circular(5),
                   ),
                 ),
                 child: Column(
@@ -160,16 +199,30 @@ class _ShellScaffold extends StatelessWidget {
                       const SizedBox(height: 8),
                       _MenuTile(
                         selected: navigationShell.currentIndex == 1,
-                        icon: Icons.handshake_rounded,
-                        label: 'Deals',
+                        icon: Icons.trending_up_rounded,
+                        label: 'Leads',
                         onTap: () => _goTo(1, context),
                       ),
                       const SizedBox(height: 8),
                       _MenuTile(
                         selected: navigationShell.currentIndex == 2,
+                        icon: Icons.handshake_rounded,
+                        label: 'Deals',
+                        onTap: () => _goTo(2, context),
+                      ),
+                      const SizedBox(height: 8),
+                      _MenuTile(
+                        selected: navigationShell.currentIndex == 3,
+                        icon: Icons.business_rounded,
+                        label: 'Clients',
+                        onTap: () => _goTo(3, context),
+                      ),
+                      const SizedBox(height: 8),
+                      _MenuTile(
+                        selected: navigationShell.currentIndex == 4,
                         icon: Icons.auto_awesome_rounded,
                         label: 'Asistente IA',
-                        onTap: () => _goTo(2, context),
+                        onTap: () => _goTo(4, context),
                       ),
                       const Spacer(),
                       const Divider(height: 1),
