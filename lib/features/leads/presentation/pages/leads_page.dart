@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/design_system/app_colors.dart';
 import '../../../../core/design_system/crm_page_shell.dart';
+import '../../../../core/design_system/app_toast.dart';
+import '../../../activities/presentation/providers/activities_providers.dart';
 import '../../../tasks/presentation/providers/tasks_providers.dart';
 import '../../domain/entities/lead.dart';
 import '../providers/leads_providers.dart';
@@ -199,14 +201,20 @@ class _LeadCard extends ConsumerWidget {
                     child: _QuickActionButton(
                       icon: Icons.call_outlined,
                       label: 'Llamar',
-                      onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              'Simulacion: llamada a ${lead.owner} (${lead.companyName}).',
-                            ),
-                          ),
-                        );
+                      onTap: () async {
+                        await ref
+                            .read(activitiesTimelineControllerProvider.notifier)
+                            .logInteraction(
+                              type: 'Llamada',
+                              summary:
+                                  'Llamada simulada a ${lead.owner} (${lead.companyName}).',
+                            );
+                        if (context.mounted) {
+                          AppToast.info(
+                            context,
+                            'Simulacion: llamada a ${lead.owner}.',
+                          );
+                        }
                       },
                     ),
                   ),
@@ -215,14 +223,20 @@ class _LeadCard extends ConsumerWidget {
                     child: _QuickActionButton(
                       icon: Icons.chat_bubble_outline_rounded,
                       label: 'WhatsApp',
-                      onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              'Simulacion: WhatsApp enviado a ${lead.owner}.',
-                            ),
-                          ),
-                        );
+                      onTap: () async {
+                        await ref
+                            .read(activitiesTimelineControllerProvider.notifier)
+                            .logInteraction(
+                              type: 'WhatsApp',
+                              summary:
+                                  'WhatsApp simulado enviado a ${lead.owner} por lead ${lead.companyName}.',
+                            );
+                        if (context.mounted) {
+                          AppToast.info(
+                            context,
+                            'Simulacion: WhatsApp enviado a ${lead.owner}.',
+                          );
+                        }
                       },
                     ),
                   ),
@@ -240,12 +254,18 @@ class _LeadCard extends ConsumerWidget {
                               dueDate: lead.nextActionDate,
                               relatedTo: lead.id,
                             );
+                        await ref
+                            .read(activitiesTimelineControllerProvider.notifier)
+                            .logInteraction(
+                              type: 'Tarea',
+                              summary:
+                                  'Tarea creada para lead ${lead.companyName}.',
+                            );
                         ref.invalidate(leadsProvider());
                         if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Tarea creada en mock API.'),
-                            ),
+                          AppToast.success(
+                            context,
+                            'Tarea creada en mock API.',
                           );
                         }
                       },

@@ -63,23 +63,45 @@ final getActivitiesUseCaseProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef GetActivitiesUseCaseRef = AutoDisposeProviderRef<GetActivitiesUseCase>;
-String _$activitiesHash() => r'd517e102ded9583133e31f3fbb7b506f55944aca';
+String _$createActivityUseCaseHash() =>
+    r'471c646bd0c2933796025ece259279243db4c462';
 
-/// See also [activities].
-@ProviderFor(activities)
-final activitiesProvider =
-    AutoDisposeFutureProvider<List<ActivityItem>>.internal(
-      activities,
-      name: r'activitiesProvider',
+/// See also [createActivityUseCase].
+@ProviderFor(createActivityUseCase)
+final createActivityUseCaseProvider =
+    AutoDisposeProvider<CreateActivityUseCase>.internal(
+      createActivityUseCase,
+      name: r'createActivityUseCaseProvider',
       debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
           ? null
-          : _$activitiesHash,
+          : _$createActivityUseCaseHash,
       dependencies: null,
       allTransitiveDependencies: null,
     );
 
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
-typedef ActivitiesRef = AutoDisposeFutureProviderRef<List<ActivityItem>>;
+typedef CreateActivityUseCaseRef =
+    AutoDisposeProviderRef<CreateActivityUseCase>;
+String _$activitiesTimelineControllerHash() =>
+    r'3b0060fee28546c7ef205b8fc8bd49682a6818e4';
+
+/// See also [ActivitiesTimelineController].
+@ProviderFor(ActivitiesTimelineController)
+final activitiesTimelineControllerProvider =
+    AsyncNotifierProvider<
+      ActivitiesTimelineController,
+      List<ActivityItem>
+    >.internal(
+      ActivitiesTimelineController.new,
+      name: r'activitiesTimelineControllerProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$activitiesTimelineControllerHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
+
+typedef _$ActivitiesTimelineController = AsyncNotifier<List<ActivityItem>>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

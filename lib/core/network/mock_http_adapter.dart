@@ -76,6 +76,14 @@ class MockHttpAdapter implements HttpAdapter {
       return _dataStore.getActivities();
     }
 
+    if (path == ApiEndpoints.activities && method == HttpMethod.post) {
+      return _dataStore.createActivity(
+        type: (data?['type'] as String?) ?? '',
+        summary: (data?['summary'] as String?) ?? '',
+        owner: (data?['owner'] as String?) ?? '',
+      );
+    }
+
     if (path == ApiEndpoints.aiInsights && method == HttpMethod.get) {
       return _dataStore.getAiInsights();
     }

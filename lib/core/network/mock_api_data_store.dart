@@ -304,6 +304,29 @@ class MockApiDataStore {
     return <String, dynamic>{'items': _activities};
   }
 
+  Map<String, dynamic> createActivity({
+    required String type,
+    required String summary,
+    required String owner,
+  }) {
+    if (summary.trim().isEmpty) {
+      return <String, dynamic>{
+        'ok': false,
+        'message': 'El resumen de actividad es obligatorio.',
+      };
+    }
+
+    _activities.insert(0, <String, dynamic>{
+      'id': 'act-${DateTime.now().microsecondsSinceEpoch}',
+      'type': type.trim().isEmpty ? 'Accion' : type.trim(),
+      'summary': summary.trim(),
+      'owner': owner.trim().isEmpty ? 'Usuario' : owner.trim(),
+      'created_at': DateTime.now().toUtc().toIso8601String(),
+    });
+
+    return <String, dynamic>{'ok': true};
+  }
+
   Map<String, dynamic> getAiInsights() {
     final riskyCount = _opportunities
         .where((item) => item['stage'] == OpportunityStage.requirement.code)

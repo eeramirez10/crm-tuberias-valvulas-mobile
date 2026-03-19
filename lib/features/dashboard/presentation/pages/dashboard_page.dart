@@ -21,7 +21,7 @@ class DashboardPage extends ConsumerWidget {
     final customersState = ref.watch(customersProvider());
     final leadsState = ref.watch(leadsProvider());
     final tasksState = ref.watch(tasksControllerProvider);
-    final activitiesState = ref.watch(activitiesProvider);
+    final activitiesState = ref.watch(activitiesTimelineControllerProvider);
 
     return CrmPageShell(
       title: 'Dashboard',
@@ -43,7 +43,7 @@ class DashboardPage extends ConsumerWidget {
             ref.invalidate(customersProvider());
             ref.invalidate(leadsProvider());
             ref.invalidate(tasksControllerProvider);
-            ref.invalidate(activitiesProvider);
+            ref.invalidate(activitiesTimelineControllerProvider);
           },
         ),
       ],
@@ -53,7 +53,7 @@ class DashboardPage extends ConsumerWidget {
           ref.invalidate(customersProvider());
           ref.invalidate(leadsProvider());
           ref.invalidate(tasksControllerProvider);
-          ref.invalidate(activitiesProvider);
+          ref.invalidate(activitiesTimelineControllerProvider);
         },
         child: ListView(
           padding: const EdgeInsets.all(16),

@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/design_system/app_toast.dart';
 import '../../../../core/design_system/app_colors.dart';
 import '../../../../core/design_system/crm_page_shell.dart';
+import '../../../activities/presentation/providers/activities_providers.dart';
 import '../../../tasks/presentation/providers/tasks_providers.dart';
 import '../../domain/entities/customer.dart';
 import '../providers/customers_providers.dart';
@@ -150,12 +152,16 @@ class _CustomerCard extends ConsumerWidget {
                         foregroundColor: AppColors.black,
                       ),
                       onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              'Simulacion: llamada a ${customer.contactPhone}.',
-                            ),
-                          ),
+                        ref
+                            .read(activitiesTimelineControllerProvider.notifier)
+                            .logInteraction(
+                              type: 'Llamada',
+                              summary:
+                                  'Llamada simulada a ${customer.contactName} (${customer.contactPhone}).',
+                            );
+                        AppToast.info(
+                          context,
+                          'Simulacion: llamada a ${customer.contactPhone}.',
                         );
                       },
                       icon: const Icon(Icons.call_outlined, size: 18),
@@ -170,12 +176,16 @@ class _CustomerCard extends ConsumerWidget {
                         foregroundColor: AppColors.black,
                       ),
                       onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              'Simulacion: WhatsApp para ${customer.contactName}.',
-                            ),
-                          ),
+                        ref
+                            .read(activitiesTimelineControllerProvider.notifier)
+                            .logInteraction(
+                              type: 'WhatsApp',
+                              summary:
+                                  'WhatsApp simulado para ${customer.contactName} en cuenta ${customer.name}.',
+                            );
+                        AppToast.info(
+                          context,
+                          'Simulacion: WhatsApp para ${customer.contactName}.',
                         );
                       },
                       icon: const Icon(
@@ -201,12 +211,15 @@ class _CustomerCard extends ConsumerWidget {
                               dueDate: '2026-03-20',
                               relatedTo: customer.id,
                             );
+                        await ref
+                            .read(activitiesTimelineControllerProvider.notifier)
+                            .logInteraction(
+                              type: 'Tarea',
+                              summary:
+                                  'Tarea de cuenta creada para ${customer.name}.',
+                            );
                         if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Tarea de cuenta creada.'),
-                            ),
-                          );
+                          AppToast.success(context, 'Tarea de cuenta creada.');
                         }
                       },
                       icon: const Icon(Icons.add_task_rounded, size: 18),

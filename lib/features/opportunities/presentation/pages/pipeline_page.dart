@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/design_system/app_toast.dart';
 import '../../../../core/design_system/app_colors.dart';
 import '../../../../core/design_system/crm_page_shell.dart';
+import '../../../activities/presentation/providers/activities_providers.dart';
 import '../../../tasks/presentation/providers/tasks_providers.dart';
 import '../../domain/entities/opportunity.dart';
 import '../providers/opportunities_providers.dart';
@@ -188,13 +190,16 @@ class _OpportunityCard extends ConsumerWidget {
                       opportunityId: opportunity.id,
                       stage: selected,
                     );
+                await ref
+                    .read(activitiesTimelineControllerProvider.notifier)
+                    .logInteraction(
+                      type: 'Pipeline',
+                      summary:
+                          'Etapa cambiada manualmente a ${selected.label} para ${opportunity.title}.',
+                    );
 
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Etapa actualizada en mock API.'),
-                    ),
-                  );
+                  AppToast.success(context, 'Etapa actualizada en mock API.');
                 }
               },
             ),
@@ -216,11 +221,17 @@ class _OpportunityCard extends ConsumerWidget {
                           opportunityId: opportunity.id,
                           stage: next,
                         );
+                    await ref
+                        .read(activitiesTimelineControllerProvider.notifier)
+                        .logInteraction(
+                          type: 'Pipeline',
+                          summary:
+                              'Oportunidad ${opportunity.title} movida a ${next.label}.',
+                        );
                     if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Etapa movida a ${next.label}.'),
-                        ),
+                      AppToast.success(
+                        context,
+                        'Etapa movida a ${next.label}.',
                       );
                     }
                   },
@@ -241,12 +252,15 @@ class _OpportunityCard extends ConsumerWidget {
                           dueDate: opportunity.expectedCloseDate,
                           relatedTo: opportunity.id,
                         );
+                    await ref
+                        .read(activitiesTimelineControllerProvider.notifier)
+                        .logInteraction(
+                          type: 'Tarea',
+                          summary:
+                              'Seguimiento creado para oportunidad ${opportunity.title}.',
+                        );
                     if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Tarea de seguimiento creada.'),
-                        ),
-                      );
+                      AppToast.success(context, 'Tarea de seguimiento creada.');
                     }
                   },
                   icon: const Icon(Icons.add_task_rounded, size: 18),
