@@ -90,6 +90,16 @@ class DashboardPage extends ConsumerWidget {
                   const _ErrorCard(message: 'No se pudo cargar resumen.'),
             ),
             const SizedBox(height: 12),
+            summaryState.when(
+              data: (summary) => _SectionCard(
+                title: 'Cotizaciones del mes',
+                child: _QuotesKpiRow(summary: summary),
+              ),
+              loading: () => const _LoadingCard(height: 100),
+              error: (_, _) =>
+                  const _ErrorCard(message: 'No se pudo cargar cotizaciones.'),
+            ),
+            const SizedBox(height: 12),
             _SectionCard(
               title: 'Panel de riesgo IA',
               child: riskSummaryState.when(
@@ -181,6 +191,46 @@ class DashboardPage extends ConsumerWidget {
   }
 }
 
+class _QuotesKpiRow extends StatelessWidget {
+  const _QuotesKpiRow({required this.summary});
+
+  final DashboardSummary summary;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: <Widget>[
+        Expanded(
+          child: _RiskPill(
+            label: 'Emitidas',
+            value: summary.quotesThisMonth,
+            background: AppColors.yellowSoft,
+            foreground: AppColors.black,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _KpiAmountPill(
+            label: 'Aprobacion',
+            value: '${(summary.quotesApprovalRate * 100).toStringAsFixed(0)}%',
+            background: Colors.green.shade100,
+            foreground: Colors.green.shade900,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _KpiAmountPill(
+            label: 'Monto aprobado',
+            value: _currency(summary.quotesApprovedAmount),
+            background: Colors.lightBlue.shade100,
+            foreground: Colors.blue.shade900,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _RiskSummaryRow extends StatelessWidget {
   const _RiskSummaryRow({
     required this.high,
@@ -254,6 +304,49 @@ class _RiskPill extends StatelessWidget {
           Text(
             '$value',
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              color: foreground,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          Text(
+            label,
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(color: foreground),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _KpiAmountPill extends StatelessWidget {
+  const _KpiAmountPill({
+    required this.label,
+    required this.value,
+    required this.background,
+    required this.foreground,
+  });
+
+  final String label;
+  final String value;
+  final Color background;
+  final Color foreground;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            value,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
               color: foreground,
               fontWeight: FontWeight.w800,
             ),

@@ -11,6 +11,8 @@ import '../../features/dashboard/presentation/pages/dashboard_page.dart';
 import '../../features/leads/presentation/pages/lead_details_page.dart';
 import '../../features/leads/presentation/pages/leads_page.dart';
 import '../../features/opportunities/presentation/pages/pipeline_page.dart';
+import '../../features/quotes/presentation/pages/quote_details_page.dart';
+import '../../features/quotes/presentation/pages/quotes_page.dart';
 
 part 'app_router.g.dart';
 
@@ -69,6 +71,23 @@ GoRouter appRouter(Ref ref) {
                       final customerId =
                           state.pathParameters['customerId'] ?? '';
                       return CustomerDetailsPage(customerId: customerId);
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: <RouteBase>[
+              GoRoute(
+                path: '/quotes',
+                builder: (context, state) => const QuotesPage(),
+                routes: <RouteBase>[
+                  GoRoute(
+                    path: ':quoteId',
+                    builder: (context, state) {
+                      final quoteId = state.pathParameters['quoteId'] ?? '';
+                      return QuoteDetailsPage(quoteId: quoteId);
                     },
                   ),
                 ],
@@ -217,16 +236,23 @@ class _ShellScaffold extends StatelessWidget {
                     const SizedBox(height: 8),
                     _MenuTile(
                       selected: navigationShell.currentIndex == 3,
-                      icon: Icons.business_rounded,
-                      label: 'Clients',
+                      icon: Icons.receipt_long_rounded,
+                      label: 'Cotizaciones',
                       onTap: () => _goTo(3, context),
                     ),
                     const SizedBox(height: 8),
                     _MenuTile(
                       selected: navigationShell.currentIndex == 4,
+                      icon: Icons.business_rounded,
+                      label: 'Clients',
+                      onTap: () => _goTo(4, context),
+                    ),
+                    const SizedBox(height: 8),
+                    _MenuTile(
+                      selected: navigationShell.currentIndex == 5,
                       icon: Icons.auto_awesome_rounded,
                       label: 'Asistente IA',
-                      onTap: () => _goTo(4, context),
+                      onTap: () => _goTo(5, context),
                     ),
                     const Spacer(),
                     const Divider(height: 1),

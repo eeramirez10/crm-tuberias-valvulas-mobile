@@ -49,6 +49,53 @@ class MockHttpAdapter implements HttpAdapter {
       );
     }
 
+    if (path == ApiEndpoints.quotes && method == HttpMethod.get) {
+      return _dataStore.getQuotes(
+        status: queryParameters?['status'] as String?,
+      );
+    }
+
+    if (path == ApiEndpoints.quotes && method == HttpMethod.post) {
+      return _dataStore.createQuote(
+        customerName: (data?['customer_name'] as String?) ?? '',
+        relatedType: (data?['related_type'] as String?) ?? 'lead',
+        relatedId: (data?['related_id'] as String?) ?? '',
+        itemsCount: (data?['items_count'] as num?)?.toInt() ?? 1,
+        subtotal: (data?['subtotal'] as num?)?.toDouble() ?? 0,
+        discount: (data?['discount'] as num?)?.toDouble() ?? 0,
+        tax: (data?['tax'] as num?)?.toDouble() ?? 0,
+        validUntil: (data?['valid_until'] as String?) ?? '',
+      );
+    }
+
+    if (path.startsWith('${ApiEndpoints.quotes}/') &&
+        !path.endsWith('/status') &&
+        !path.endsWith('/convert-order') &&
+        method == HttpMethod.get) {
+      final segments = path.split('/');
+      final id = segments[2];
+      return _dataStore.getQuoteById(id);
+    }
+
+    if (path.startsWith('${ApiEndpoints.quotes}/') &&
+        path.endsWith('/status') &&
+        method == HttpMethod.patch) {
+      final segments = path.split('/');
+      final id = segments[2];
+      return _dataStore.updateQuoteStatus(
+        id: id,
+        status: (data?['status'] as String?) ?? '',
+      );
+    }
+
+    if (path.startsWith('${ApiEndpoints.quotes}/') &&
+        path.endsWith('/convert-order') &&
+        method == HttpMethod.post) {
+      final segments = path.split('/');
+      final id = segments[2];
+      return _dataStore.convertQuoteToOrder(id);
+    }
+
     if (path == ApiEndpoints.tasks && method == HttpMethod.get) {
       return _dataStore.getTasks(
         completed: queryParameters?['completed'] as bool?,

@@ -6,6 +6,9 @@ class DashboardSummary {
     required this.openTasks,
     required this.wonThisMonth,
     required this.conversionRate,
+    required this.quotesThisMonth,
+    required this.quotesApprovalRate,
+    required this.quotesApprovedAmount,
   });
 
   final int totalCustomers;
@@ -14,4 +17,7 @@ class DashboardSummary {
   final int openTasks;
   final double wonThisMonth;
   final double conversionRate;
+  final int quotesThisMonth;
+  final double quotesApprovalRate;
+  final double quotesApprovedAmount;
 }

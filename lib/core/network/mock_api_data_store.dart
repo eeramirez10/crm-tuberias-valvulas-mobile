@@ -7,11 +7,13 @@ class MockApiDataStore {
     required List<Map<String, dynamic>> customers,
     required List<Map<String, dynamic>> leads,
     required List<Map<String, dynamic>> opportunities,
+    required List<Map<String, dynamic>> quotes,
     required List<Map<String, dynamic>> tasks,
     required List<Map<String, dynamic>> activities,
   }) : _customers = customers,
        _leads = leads,
        _opportunities = opportunities,
+       _quotes = quotes,
        _tasks = tasks,
        _activities = activities;
 
@@ -104,6 +106,53 @@ class MockApiDataStore {
           'expected_close_date': '2026-04-05',
         },
       ],
+      quotes: <Map<String, dynamic>>[
+        {
+          'id': 'quo-001',
+          'code': 'COT-2026-001',
+          'customer_name': 'Constructora del Golfo',
+          'related_type': 'opportunity',
+          'related_id': 'opp-001',
+          'status': 'Enviada',
+          'items_count': 6,
+          'subtotal': 220000.0,
+          'discount': 8000.0,
+          'tax': 33920.0,
+          'total': 245920.0,
+          'valid_until': '2026-03-30',
+          'created_at': '2026-03-18',
+        },
+        {
+          'id': 'quo-002',
+          'code': 'COT-2026-002',
+          'customer_name': 'Mantenimiento Industrial Norte',
+          'related_type': 'opportunity',
+          'related_id': 'opp-002',
+          'status': 'Aprobada',
+          'items_count': 4,
+          'subtotal': 94000.0,
+          'discount': 3500.0,
+          'tax': 14480.0,
+          'total': 104980.0,
+          'valid_until': '2026-03-27',
+          'created_at': '2026-03-17',
+        },
+        {
+          'id': 'quo-003',
+          'code': 'COT-2026-003',
+          'customer_name': 'Planta Embotelladora Delta',
+          'related_type': 'lead',
+          'related_id': 'lead-001',
+          'status': 'Borrador',
+          'items_count': 3,
+          'subtotal': 78000.0,
+          'discount': 0.0,
+          'tax': 12480.0,
+          'total': 90480.0,
+          'valid_until': '2026-03-31',
+          'created_at': '2026-03-19',
+        },
+      ],
       tasks: <Map<String, dynamic>>[
         {
           'id': 'task-001',
@@ -160,6 +209,7 @@ class MockApiDataStore {
   final List<Map<String, dynamic>> _customers;
   final List<Map<String, dynamic>> _leads;
   final List<Map<String, dynamic>> _opportunities;
+  final List<Map<String, dynamic>> _quotes;
   final List<Map<String, dynamic>> _tasks;
   final List<Map<String, dynamic>> _activities;
 
@@ -172,6 +222,29 @@ class MockApiDataStore {
     final openTasks = _tasks
         .where((task) => task['completed'] as bool == false)
         .length;
+    final now = DateTime.now();
+    final quotesThisMonth = _quotes.where((quote) {
+      final createdRaw = quote['created_at'] as String? ?? '';
+      final createdAt = DateTime.tryParse(createdRaw);
+      if (createdAt == null) {
+        return false;
+      }
+      return createdAt.year == now.year && createdAt.month == now.month;
+    }).length;
+
+    final approvedQuotes = _quotes
+        .where(
+          (quote) =>
+              quote['status'] == 'Aprobada' || quote['status'] == 'Convertida',
+        )
+        .toList(growable: false);
+    final approvedAmount = approvedQuotes.fold<double>(
+      0,
+      (sum, quote) => sum + ((quote['total'] as num?)?.toDouble() ?? 0),
+    );
+    final approvalRate = _quotes.isEmpty
+        ? 0.0
+        : approvedQuotes.length / _quotes.length;
 
     return <String, dynamic>{
       'total_customers': _customers.length,
@@ -180,6 +253,9 @@ class MockApiDataStore {
       'open_tasks': openTasks,
       'won_this_month': 312000.0,
       'conversion_rate': 0.31,
+      'quotes_this_month': quotesThisMonth,
+      'quotes_approval_rate': approvalRate,
+      'quotes_approved_amount': approvedAmount,
     };
   }
 
@@ -219,6 +295,122 @@ class MockApiDataStore {
         .where((item) => item['stage'] == stage)
         .toList(growable: false);
     return <String, dynamic>{'items': filtered};
+  }
+
+  Map<String, dynamic> getQuotes({String? status}) {
+    if (status == null || status.trim().isEmpty) {
+      return <String, dynamic>{'items': _quotes};
+    }
+
+    final filtered = _quotes
+        .where((item) => (item['status'] as String?) == status)
+        .toList(growable: false);
+    return <String, dynamic>{'items': filtered};
+  }
+
+  Map<String, dynamic> getQuoteById(String id) {
+    final index = _quotes.indexWhere((quote) => quote['id'] == id);
+    if (index == -1) {
+      return <String, dynamic>{'item': <String, dynamic>{}};
+    }
+    return <String, dynamic>{'item': _quotes[index]};
+  }
+
+  Map<String, dynamic> createQuote({
+    required String customerName,
+    required String relatedType,
+    required String relatedId,
+    required int itemsCount,
+    required double subtotal,
+    required double discount,
+    required double tax,
+    required String validUntil,
+  }) {
+    if (customerName.trim().isEmpty || relatedId.trim().isEmpty) {
+      return <String, dynamic>{
+        'ok': false,
+        'message': 'Cliente e ID relacionado son obligatorios.',
+        'item': <String, dynamic>{},
+      };
+    }
+
+    final quoteNumber = _quotes.length + 1;
+    final id = 'quo-${DateTime.now().microsecondsSinceEpoch}';
+    final total = subtotal - discount + tax;
+    final item = <String, dynamic>{
+      'id': id,
+      'code': 'COT-2026-${quoteNumber.toString().padLeft(3, '0')}',
+      'customer_name': customerName.trim(),
+      'related_type': relatedType.trim().isEmpty ? 'lead' : relatedType.trim(),
+      'related_id': relatedId.trim(),
+      'status': 'Borrador',
+      'items_count': max(1, itemsCount),
+      'subtotal': subtotal,
+      'discount': discount,
+      'tax': tax,
+      'total': max(0, total),
+      'valid_until': validUntil.trim().isEmpty
+          ? '2026-03-30'
+          : validUntil.trim(),
+      'created_at': DateTime.now().toIso8601String().split('T').first,
+    };
+
+    _quotes.insert(0, item);
+    return <String, dynamic>{'ok': true, 'item': item};
+  }
+
+  Map<String, dynamic> updateQuoteStatus({
+    required String id,
+    required String status,
+  }) {
+    final index = _quotes.indexWhere((quote) => quote['id'] == id);
+    if (index == -1) {
+      return <String, dynamic>{
+        'ok': false,
+        'message': 'Cotizacion no encontrada.',
+      };
+    }
+
+    _quotes[index] = <String, dynamic>{
+      ..._quotes[index],
+      'status': status.trim().isEmpty ? 'Borrador' : status.trim(),
+    };
+
+    return <String, dynamic>{'ok': true};
+  }
+
+  Map<String, dynamic> convertQuoteToOrder(String id) {
+    final index = _quotes.indexWhere((quote) => quote['id'] == id);
+    if (index == -1) {
+      return <String, dynamic>{
+        'ok': false,
+        'message': 'Cotizacion no encontrada.',
+      };
+    }
+
+    if (_quotes[index]['status'] == 'Rechazada') {
+      return <String, dynamic>{
+        'ok': false,
+        'message': 'No se puede convertir una cotizacion rechazada.',
+      };
+    }
+
+    final orderId = 'PED-${DateTime.now().millisecondsSinceEpoch}';
+    _quotes[index] = <String, dynamic>{
+      ..._quotes[index],
+      'status': 'Convertida',
+    };
+
+    _activities.insert(0, <String, dynamic>{
+      'id': 'act-${DateTime.now().microsecondsSinceEpoch}',
+      'type': 'Pedido',
+      'summary':
+          'Cotizacion ${_quotes[index]['code']} convertida a pedido $orderId.',
+      'owner': 'Erick Ramirez',
+      'created_at': DateTime.now().toUtc().toIso8601String(),
+    });
+
+    return <String, dynamic>{'ok': true, 'order_id': orderId};
   }
 
   Map<String, dynamic> updateOpportunityStage({
