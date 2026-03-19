@@ -266,6 +266,40 @@ class MockApiDataStore {
     return <String, dynamic>{'ok': true};
   }
 
+  Map<String, dynamic> createTask({
+    required String title,
+    required String type,
+    required String dueDate,
+    required String relatedTo,
+  }) {
+    if (title.trim().isEmpty || relatedTo.trim().isEmpty) {
+      return <String, dynamic>{
+        'ok': false,
+        'message': 'Titulo y relacionado son obligatorios.',
+      };
+    }
+
+    final id = 'task-${DateTime.now().microsecondsSinceEpoch}';
+    _tasks.insert(0, <String, dynamic>{
+      'id': id,
+      'title': title.trim(),
+      'type': type.trim().isEmpty ? 'Seguimiento' : type.trim(),
+      'due_date': dueDate.trim().isEmpty ? '2026-03-20' : dueDate.trim(),
+      'related_to': relatedTo.trim(),
+      'completed': false,
+    });
+
+    _activities.insert(0, <String, dynamic>{
+      'id': 'act-${DateTime.now().millisecondsSinceEpoch}',
+      'type': 'Tarea',
+      'summary': 'Nueva tarea creada: $title',
+      'owner': 'Erick Ramirez',
+      'created_at': DateTime.now().toUtc().toIso8601String(),
+    });
+
+    return <String, dynamic>{'ok': true};
+  }
+
   Map<String, dynamic> getActivities() {
     return <String, dynamic>{'items': _activities};
   }

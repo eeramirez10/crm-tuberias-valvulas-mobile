@@ -76,7 +76,25 @@ final completeTaskUseCaseProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef CompleteTaskUseCaseRef = AutoDisposeProviderRef<CompleteTaskUseCase>;
-String _$tasksControllerHash() => r'bb1deb65457c73fcbf0fa0bc84f5a7d11309f19e';
+String _$createTaskUseCaseHash() => r'a06b8c622ccb13a888af0934251be60193e843ca';
+
+/// See also [createTaskUseCase].
+@ProviderFor(createTaskUseCase)
+final createTaskUseCaseProvider =
+    AutoDisposeProvider<CreateTaskUseCase>.internal(
+      createTaskUseCase,
+      name: r'createTaskUseCaseProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$createTaskUseCaseHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef CreateTaskUseCaseRef = AutoDisposeProviderRef<CreateTaskUseCase>;
+String _$tasksControllerHash() => r'90183e03746cb191b3a2dc30af14e50044774be4';
 
 /// See also [TasksController].
 @ProviderFor(TasksController)

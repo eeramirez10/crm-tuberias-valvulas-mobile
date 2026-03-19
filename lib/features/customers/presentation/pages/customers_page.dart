@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/design_system/app_colors.dart';
 import '../../../../core/design_system/crm_page_shell.dart';
+import '../../../tasks/presentation/providers/tasks_providers.dart';
 import '../../domain/entities/customer.dart';
 import '../providers/customers_providers.dart';
 
@@ -53,13 +54,13 @@ class CustomersPage extends ConsumerWidget {
   }
 }
 
-class _CustomerCard extends StatelessWidget {
+class _CustomerCard extends ConsumerWidget {
   const _CustomerCard({required this.customer});
 
   final Customer customer;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final estimatedRevenue = NumberFormat.currency(
       locale: 'es_MX',
       symbol: '\$',
@@ -135,6 +136,81 @@ class _CustomerCard extends StatelessWidget {
                     estimatedRevenue,
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: AppColors.black),
+                        foregroundColor: AppColors.black,
+                      ),
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Simulacion: llamada a ${customer.contactPhone}.',
+                            ),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.call_outlined, size: 18),
+                      label: const Text('Llamar'),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: AppColors.black),
+                        foregroundColor: AppColors.black,
+                      ),
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Simulacion: WhatsApp para ${customer.contactName}.',
+                            ),
+                          ),
+                        );
+                      },
+                      icon: const Icon(
+                        Icons.chat_bubble_outline_rounded,
+                        size: 18,
+                      ),
+                      label: const Text('WhatsApp'),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: AppColors.black),
+                        foregroundColor: AppColors.black,
+                      ),
+                      onPressed: () async {
+                        await ref
+                            .read(tasksControllerProvider.notifier)
+                            .createFollowUpTask(
+                              title: 'Seguimiento cuenta ${customer.name}',
+                              type: 'Cuenta',
+                              dueDate: '2026-03-20',
+                              relatedTo: customer.id,
+                            );
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Tarea de cuenta creada.'),
+                            ),
+                          );
+                        }
+                      },
+                      icon: const Icon(Icons.add_task_rounded, size: 18),
+                      label: const Text('Tarea'),
                     ),
                   ),
                 ],

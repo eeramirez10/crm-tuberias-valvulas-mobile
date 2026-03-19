@@ -2,9 +2,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/providers/core_providers.dart';
+import '../../domain/entities/create_task_input.dart';
 import '../../domain/entities/task_item.dart';
 import '../../domain/repositories/tasks_repository.dart';
 import '../../domain/usecases/complete_task_use_case.dart';
+import '../../domain/usecases/create_task_use_case.dart';
 import '../../domain/usecases/get_tasks_use_case.dart';
 import '../../infrastructure/datasources/tasks_datasource.dart';
 import '../../infrastructure/repositories/tasks_repository_impl.dart';
@@ -32,6 +34,11 @@ CompleteTaskUseCase completeTaskUseCase(Ref ref) {
 }
 
 @riverpod
+CreateTaskUseCase createTaskUseCase(Ref ref) {
+  return CreateTaskUseCase(ref.watch(tasksRepositoryProvider));
+}
+
+@riverpod
 class TasksController extends _$TasksController {
   @override
   Future<List<TaskItem>> build() {
@@ -44,6 +51,36 @@ class TasksController extends _$TasksController {
 
     try {
       await ref.read(completeTaskUseCaseProvider).call(taskId);
+      final refreshed = await ref
+          .read(getTasksUseCaseProvider)
+          .call(completed: false);
+      state = AsyncData(refreshed);
+    } catch (_) {
+      state = AsyncData(currentItems);
+      rethrow;
+    }
+  }
+
+  Future<void> createFollowUpTask({
+    required String title,
+    required String type,
+    required String dueDate,
+    required String relatedTo,
+  }) async {
+    final currentItems = state.valueOrNull ?? <TaskItem>[];
+    state = const AsyncLoading();
+
+    try {
+      await ref
+          .read(createTaskUseCaseProvider)
+          .call(
+            CreateTaskInput(
+              title: title,
+              type: type,
+              dueDate: dueDate,
+              relatedTo: relatedTo,
+            ),
+          );
       final refreshed = await ref
           .read(getTasksUseCaseProvider)
           .call(completed: false);

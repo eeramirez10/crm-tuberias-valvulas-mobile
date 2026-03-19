@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/design_system/app_colors.dart';
 import '../../../../core/design_system/crm_page_shell.dart';
+import '../../../tasks/presentation/providers/tasks_providers.dart';
 import '../../domain/entities/opportunity.dart';
 import '../providers/opportunities_providers.dart';
 
@@ -197,6 +198,62 @@ class _OpportunityCard extends ConsumerWidget {
                 }
               },
             ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: <Widget>[
+                OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: AppColors.black),
+                    foregroundColor: AppColors.black,
+                  ),
+                  onPressed: () async {
+                    final next = _nextStage(opportunity.stage);
+                    await ref
+                        .read(opportunitiesControllerProvider.notifier)
+                        .moveToStage(
+                          opportunityId: opportunity.id,
+                          stage: next,
+                        );
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Etapa movida a ${next.label}.'),
+                        ),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.trending_up_rounded, size: 18),
+                  label: const Text('Mover +1 etapa'),
+                ),
+                OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: AppColors.black),
+                    foregroundColor: AppColors.black,
+                  ),
+                  onPressed: () async {
+                    await ref
+                        .read(tasksControllerProvider.notifier)
+                        .createFollowUpTask(
+                          title: 'Seguimiento oportunidad ${opportunity.title}',
+                          type: 'Seguimiento',
+                          dueDate: opportunity.expectedCloseDate,
+                          relatedTo: opportunity.id,
+                        );
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Tarea de seguimiento creada.'),
+                        ),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.add_task_rounded, size: 18),
+                  label: const Text('Crear tarea'),
+                ),
+              ],
+            ),
             const SizedBox(height: 8),
             Text(
               'Cierre estimado: ${opportunity.expectedCloseDate}',
@@ -209,4 +266,13 @@ class _OpportunityCard extends ConsumerWidget {
       ),
     );
   }
+}
+
+OpportunityStage _nextStage(OpportunityStage current) {
+  final values = OpportunityStage.values;
+  final index = values.indexOf(current);
+  if (index == -1 || index == values.length - 1) {
+    return current;
+  }
+  return values[index + 1];
 }

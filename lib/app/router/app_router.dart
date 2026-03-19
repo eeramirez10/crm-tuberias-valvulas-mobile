@@ -111,147 +111,150 @@ class _ShellScaffold extends StatelessWidget {
         backgroundColor: AppColors.panel,
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.only(
-            topRight: Radius.circular(34),
-            bottomRight: Radius.circular(34),
+            topRight: Radius.circular(20),
+            bottomRight: Radius.circular(20),
           ),
         ),
-        child: SafeArea(
-          child: Column(
-            children: <Widget>[
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.fromLTRB(18, 18, 18, 20),
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: <Color>[AppColors.blackSoft, AppColors.black],
-                  ),
-                  borderRadius: BorderRadius.only(
-                    topRight: Radius.circular(5),
-                  ),
+        child: Column(
+          children: <Widget>[
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.fromLTRB(
+                18,
+                MediaQuery.of(context).padding.top + 18,
+                18,
+                20,
+              ),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: <Color>[AppColors.blackSoft, AppColors.black],
                 ),
+                borderRadius: BorderRadius.only(topRight: Radius.circular(5)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    'Menu',
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      color: AppColors.yellow,
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Row(
+                    children: <Widget>[
+                      const CircleAvatar(
+                        radius: 34,
+                        backgroundColor: AppColors.yellow,
+                        child: Icon(
+                          Icons.person,
+                          size: 36,
+                          color: AppColors.black,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: const <Widget>[
+                          Text(
+                            'Erick Ramirez',
+                            style: TextStyle(
+                              color: AppColors.textOnDark,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 18,
+                            ),
+                          ),
+                          SizedBox(height: 3),
+                          Text(
+                            'Supervisor comercial',
+                            style: TextStyle(color: Colors.white70),
+                          ),
+                          Text(
+                            'Tuvansa CRM',
+                            style: TextStyle(color: Colors.white54),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 20),
+                ],
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(
-                      'Menu',
-                      style: Theme.of(context).textTheme.headlineSmall
-                          ?.copyWith(color: AppColors.yellow),
+                      'Navegacion',
+                      style: Theme.of(context).textTheme.titleMedium,
                     ),
-                    const SizedBox(height: 18),
-                    Row(
-                      children: <Widget>[
-                        const CircleAvatar(
-                          radius: 34,
-                          backgroundColor: AppColors.yellow,
-                          child: Icon(
-                            Icons.person,
-                            size: 36,
-                            color: AppColors.black,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const <Widget>[
-                            Text(
-                              'Erick Ramirez',
-                              style: TextStyle(
-                                color: AppColors.textOnDark,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 18,
-                              ),
-                            ),
-                            SizedBox(height: 3),
-                            Text(
-                              'Supervisor comercial',
-                              style: TextStyle(color: Colors.white70),
-                            ),
-                            Text(
-                              'Tuvansa CRM',
-                              style: TextStyle(color: Colors.white54),
-                            ),
-                          ],
-                        ),
-                      ],
+                    const SizedBox(height: 10),
+                    _MenuTile(
+                      selected: navigationShell.currentIndex == 0,
+                      icon: Icons.dashboard_rounded,
+                      label: 'Dashboard',
+                      onTap: () => _goTo(0, context),
+                    ),
+                    const SizedBox(height: 8),
+                    _MenuTile(
+                      selected: navigationShell.currentIndex == 1,
+                      icon: Icons.trending_up_rounded,
+                      label: 'Leads',
+                      onTap: () => _goTo(1, context),
+                    ),
+                    const SizedBox(height: 8),
+                    _MenuTile(
+                      selected: navigationShell.currentIndex == 2,
+                      icon: Icons.handshake_rounded,
+                      label: 'Deals',
+                      onTap: () => _goTo(2, context),
+                    ),
+                    const SizedBox(height: 8),
+                    _MenuTile(
+                      selected: navigationShell.currentIndex == 3,
+                      icon: Icons.business_rounded,
+                      label: 'Clients',
+                      onTap: () => _goTo(3, context),
+                    ),
+                    const SizedBox(height: 8),
+                    _MenuTile(
+                      selected: navigationShell.currentIndex == 4,
+                      icon: Icons.auto_awesome_rounded,
+                      label: 'Asistente IA',
+                      onTap: () => _goTo(4, context),
+                    ),
+                    const Spacer(),
+                    const Divider(height: 1),
+                    const SizedBox(height: 10),
+                    const ListTile(
+                      dense: true,
+                      leading: Icon(Icons.info_outline),
+                      title: Text('CRM v1.0.0'),
+                      subtitle: Text('Demo amarillo/negro'),
+                    ),
+                    const SizedBox(height: 8),
+                    OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size(double.infinity, 48),
+                        foregroundColor: AppColors.black,
+                        side: const BorderSide(color: AppColors.black),
+                      ),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      icon: const Icon(Icons.logout),
+                      label: const Text('Cerrar menu'),
                     ),
                   ],
                 ),
               ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(
-                        'Navegacion',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 10),
-                      _MenuTile(
-                        selected: navigationShell.currentIndex == 0,
-                        icon: Icons.dashboard_rounded,
-                        label: 'Dashboard',
-                        onTap: () => _goTo(0, context),
-                      ),
-                      const SizedBox(height: 8),
-                      _MenuTile(
-                        selected: navigationShell.currentIndex == 1,
-                        icon: Icons.trending_up_rounded,
-                        label: 'Leads',
-                        onTap: () => _goTo(1, context),
-                      ),
-                      const SizedBox(height: 8),
-                      _MenuTile(
-                        selected: navigationShell.currentIndex == 2,
-                        icon: Icons.handshake_rounded,
-                        label: 'Deals',
-                        onTap: () => _goTo(2, context),
-                      ),
-                      const SizedBox(height: 8),
-                      _MenuTile(
-                        selected: navigationShell.currentIndex == 3,
-                        icon: Icons.business_rounded,
-                        label: 'Clients',
-                        onTap: () => _goTo(3, context),
-                      ),
-                      const SizedBox(height: 8),
-                      _MenuTile(
-                        selected: navigationShell.currentIndex == 4,
-                        icon: Icons.auto_awesome_rounded,
-                        label: 'Asistente IA',
-                        onTap: () => _goTo(4, context),
-                      ),
-                      const Spacer(),
-                      const Divider(height: 1),
-                      const SizedBox(height: 10),
-                      const ListTile(
-                        dense: true,
-                        leading: Icon(Icons.info_outline),
-                        title: Text('CRM v1.0.0'),
-                        subtitle: Text('Demo amarillo/negro'),
-                      ),
-                      const SizedBox(height: 8),
-                      OutlinedButton.icon(
-                        style: OutlinedButton.styleFrom(
-                          minimumSize: const Size(double.infinity, 48),
-                          foregroundColor: AppColors.black,
-                          side: const BorderSide(color: AppColors.black),
-                        ),
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                        icon: const Icon(Icons.logout),
-                        label: const Text('Cerrar menu'),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
       body: navigationShell,

@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/design_system/app_colors.dart';
 import '../../../../core/design_system/crm_page_shell.dart';
+import '../../../tasks/presentation/providers/tasks_providers.dart';
 import '../../domain/entities/lead.dart';
 import '../providers/leads_providers.dart';
 
@@ -90,13 +91,13 @@ class _LeadFilters extends StatelessWidget {
   }
 }
 
-class _LeadCard extends StatelessWidget {
+class _LeadCard extends ConsumerWidget {
   const _LeadCard({required this.lead});
 
   final Lead lead;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final amount = NumberFormat.currency(
       locale: 'es_MX',
       symbol: '\$',
@@ -191,10 +192,96 @@ class _LeadCard extends StatelessWidget {
                   const Icon(Icons.arrow_forward_rounded),
                 ],
               ),
+              const SizedBox(height: 10),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: _QuickActionButton(
+                      icon: Icons.call_outlined,
+                      label: 'Llamar',
+                      onTap: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Simulacion: llamada a ${lead.owner} (${lead.companyName}).',
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _QuickActionButton(
+                      icon: Icons.chat_bubble_outline_rounded,
+                      label: 'WhatsApp',
+                      onTap: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Simulacion: WhatsApp enviado a ${lead.owner}.',
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _QuickActionButton(
+                      icon: Icons.add_task_rounded,
+                      label: 'Tarea',
+                      onTap: () async {
+                        await ref
+                            .read(tasksControllerProvider.notifier)
+                            .createFollowUpTask(
+                              title: 'Seguimiento lead ${lead.companyName}',
+                              type: 'Seguimiento',
+                              dueDate: lead.nextActionDate,
+                              relatedTo: lead.id,
+                            );
+                        ref.invalidate(leadsProvider());
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Tarea creada en mock API.'),
+                            ),
+                          );
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class _QuickActionButton extends StatelessWidget {
+  const _QuickActionButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton.icon(
+      style: OutlinedButton.styleFrom(
+        side: const BorderSide(color: AppColors.black),
+        foregroundColor: AppColors.black,
+      ),
+      onPressed: onTap,
+      icon: Icon(icon, size: 18),
+      label: Text(label, overflow: TextOverflow.ellipsis),
     );
   }
 }

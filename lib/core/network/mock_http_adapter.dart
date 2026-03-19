@@ -55,6 +55,15 @@ class MockHttpAdapter implements HttpAdapter {
       );
     }
 
+    if (path == ApiEndpoints.tasks && method == HttpMethod.post) {
+      return _dataStore.createTask(
+        title: (data?['title'] as String?) ?? '',
+        type: (data?['type'] as String?) ?? 'Seguimiento',
+        dueDate: (data?['due_date'] as String?) ?? '',
+        relatedTo: (data?['related_to'] as String?) ?? '',
+      );
+    }
+
     if (path.startsWith('${ApiEndpoints.tasks}/') &&
         path.endsWith('/complete') &&
         method == HttpMethod.patch) {
