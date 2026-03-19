@@ -28,6 +28,13 @@ class MockHttpAdapter implements HttpAdapter {
       return _dataStore.getCustomers(query: queryParameters?['q'] as String?);
     }
 
+    if (path == ApiEndpoints.products && method == HttpMethod.get) {
+      return _dataStore.getProducts(
+        query: queryParameters?['q'] as String?,
+        category: queryParameters?['category'] as String?,
+      );
+    }
+
     if (path == ApiEndpoints.leads && method == HttpMethod.get) {
       return _dataStore.getLeads(status: queryParameters?['status'] as String?);
     }
@@ -56,14 +63,15 @@ class MockHttpAdapter implements HttpAdapter {
     }
 
     if (path == ApiEndpoints.quotes && method == HttpMethod.post) {
+      final rawLines = (data?['lines'] as List<dynamic>? ?? <dynamic>[])
+          .whereType<Map<String, dynamic>>()
+          .toList(growable: false);
       return _dataStore.createQuote(
         customerName: (data?['customer_name'] as String?) ?? '',
         relatedType: (data?['related_type'] as String?) ?? 'lead',
         relatedId: (data?['related_id'] as String?) ?? '',
-        itemsCount: (data?['items_count'] as num?)?.toInt() ?? 1,
-        subtotal: (data?['subtotal'] as num?)?.toDouble() ?? 0,
-        discount: (data?['discount'] as num?)?.toDouble() ?? 0,
-        tax: (data?['tax'] as num?)?.toDouble() ?? 0,
+        lines: rawLines,
+        taxRate: (data?['tax_rate'] as num?)?.toDouble() ?? 0.16,
         validUntil: (data?['valid_until'] as String?) ?? '',
       );
     }

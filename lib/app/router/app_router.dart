@@ -11,6 +11,7 @@ import '../../features/dashboard/presentation/pages/dashboard_page.dart';
 import '../../features/leads/presentation/pages/lead_details_page.dart';
 import '../../features/leads/presentation/pages/leads_page.dart';
 import '../../features/opportunities/presentation/pages/pipeline_page.dart';
+import '../../features/products/presentation/pages/products_page.dart';
 import '../../features/quotes/presentation/pages/quote_details_page.dart';
 import '../../features/quotes/presentation/pages/quotes_page.dart';
 
@@ -62,6 +63,23 @@ GoRouter appRouter(Ref ref) {
           StatefulShellBranch(
             routes: <RouteBase>[
               GoRoute(
+                path: '/quotes',
+                builder: (context, state) => const QuotesPage(),
+                routes: <RouteBase>[
+                  GoRoute(
+                    path: ':quoteId',
+                    builder: (context, state) {
+                      final quoteId = state.pathParameters['quoteId'] ?? '';
+                      return QuoteDetailsPage(quoteId: quoteId);
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: <RouteBase>[
+              GoRoute(
                 path: '/customers',
                 builder: (context, state) => const CustomersPage(),
                 routes: <RouteBase>[
@@ -80,17 +98,8 @@ GoRouter appRouter(Ref ref) {
           StatefulShellBranch(
             routes: <RouteBase>[
               GoRoute(
-                path: '/quotes',
-                builder: (context, state) => const QuotesPage(),
-                routes: <RouteBase>[
-                  GoRoute(
-                    path: ':quoteId',
-                    builder: (context, state) {
-                      final quoteId = state.pathParameters['quoteId'] ?? '';
-                      return QuoteDetailsPage(quoteId: quoteId);
-                    },
-                  ),
-                ],
+                path: '/products',
+                builder: (context, state) => const ProductsPage(),
               ),
             ],
           ),
@@ -248,9 +257,16 @@ class _ShellScaffold extends StatelessWidget {
                   const SizedBox(height: 8),
                   _MenuTile(
                     selected: navigationShell.currentIndex == 5,
+                    icon: Icons.inventory_2_rounded,
+                    label: 'Catalogo',
+                    onTap: () => _goTo(5, context),
+                  ),
+                  const SizedBox(height: 8),
+                  _MenuTile(
+                    selected: navigationShell.currentIndex == 6,
                     icon: Icons.auto_awesome_rounded,
                     label: 'Asistente IA',
-                    onTap: () => _goTo(5, context),
+                    onTap: () => _goTo(6, context),
                   ),
                   const SizedBox(height: 12),
                   const Divider(height: 1),

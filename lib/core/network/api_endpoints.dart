@@ -3,6 +3,7 @@ class ApiEndpoints {
 
   static const dashboardSummary = '/dashboard/summary';
   static const customers = '/customers';
+  static const products = '/products';
   static const leads = '/leads';
   static const opportunities = '/opportunities';
   static const quotes = '/quotes';

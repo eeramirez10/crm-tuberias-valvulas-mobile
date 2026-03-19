@@ -100,6 +100,16 @@ class DashboardPage extends ConsumerWidget {
                   const _ErrorCard(message: 'No se pudo cargar cotizaciones.'),
             ),
             const SizedBox(height: 12),
+            summaryState.when(
+              data: (summary) => _SectionCard(
+                title: 'Top productos cotizados',
+                child: _TopProductsList(items: summary.topQuotedProducts),
+              ),
+              loading: () => const _LoadingCard(height: 90),
+              error: (_, _) =>
+                  const _ErrorCard(message: 'No se pudo cargar productos top.'),
+            ),
+            const SizedBox(height: 12),
             _SectionCard(
               title: 'Panel de riesgo IA',
               child: riskSummaryState.when(
@@ -187,6 +197,46 @@ class DashboardPage extends ConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _TopProductsList extends StatelessWidget {
+  const _TopProductsList({required this.items});
+
+  final List<DashboardTopQuotedProduct> items;
+
+  @override
+  Widget build(BuildContext context) {
+    if (items.isEmpty) {
+      return const Text('Aun no hay cotizaciones este mes.');
+    }
+
+    return Column(
+      children: items
+          .map(
+            (item) => ListTile(
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+              leading: const CircleAvatar(
+                backgroundColor: AppColors.yellow,
+                child: Icon(
+                  Icons.inventory_2_outlined,
+                  color: AppColors.black,
+                  size: 18,
+                ),
+              ),
+              title: Text(item.productName),
+              trailing: Text(
+                '${item.quantity} u',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: AppColors.black,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          )
+          .toList(growable: false),
     );
   }
 }

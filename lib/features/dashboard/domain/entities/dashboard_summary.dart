@@ -1,3 +1,13 @@
+class DashboardTopQuotedProduct {
+  const DashboardTopQuotedProduct({
+    required this.productName,
+    required this.quantity,
+  });
+
+  final String productName;
+  final int quantity;
+}
+
 class DashboardSummary {
   const DashboardSummary({
     required this.totalCustomers,
@@ -9,6 +19,7 @@ class DashboardSummary {
     required this.quotesThisMonth,
     required this.quotesApprovalRate,
     required this.quotesApprovedAmount,
+    required this.topQuotedProducts,
   });
 
   final int totalCustomers;
@@ -20,4 +31,5 @@ class DashboardSummary {
   final int quotesThisMonth;
   final double quotesApprovalRate;
   final double quotesApprovedAmount;
+  final List<DashboardTopQuotedProduct> topQuotedProducts;
 }

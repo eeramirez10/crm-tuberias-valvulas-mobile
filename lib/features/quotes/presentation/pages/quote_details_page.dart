@@ -10,6 +10,7 @@ import '../../../activities/presentation/providers/activities_providers.dart';
 import '../../../dashboard/presentation/providers/dashboard_providers.dart';
 import '../../../tasks/presentation/providers/tasks_providers.dart';
 import '../../domain/entities/quote.dart';
+import '../../domain/entities/quote_line.dart';
 import '../providers/quotes_providers.dart';
 
 class QuoteDetailsPage extends ConsumerWidget {
@@ -88,6 +89,31 @@ class QuoteDetailsPage extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       Text(
+                        'Lineas de cotizacion',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 8),
+                      if (quote.lines.isEmpty)
+                        const Text('Sin lineas registradas.')
+                      else
+                        ...quote.lines.map(
+                          (line) => Padding(
+                            padding: const EdgeInsets.only(bottom: 10),
+                            child: _QuoteLineTile(line: line),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
                         'Resumen financiero',
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
@@ -110,8 +136,14 @@ class QuoteDetailsPage extends ConsumerWidget {
                         value: currency.format(quote.total),
                         highlighted: true,
                       ),
+                      _AmountLine(
+                        label: 'Margen estimado',
+                        value:
+                            '${(quote.marginRate * 100).toStringAsFixed(1)}%',
+                        highlighted: true,
+                      ),
                       const SizedBox(height: 6),
-                      Text('Items: ${quote.itemsCount}'),
+                      Text('Lineas: ${quote.itemsCount}'),
                     ],
                   ),
                 ),
@@ -276,6 +308,64 @@ class QuoteDetailsPage extends ConsumerWidget {
         error: (error, _) => Center(
           child: Text('No se pudo cargar detalle de cotizacion: $error'),
         ),
+      ),
+    );
+  }
+}
+
+class _QuoteLineTile extends StatelessWidget {
+  const _QuoteLineTile({required this.line});
+
+  final QuoteLine line;
+
+  @override
+  Widget build(BuildContext context) {
+    final currency = NumberFormat.currency(locale: 'es_MX', symbol: '\$');
+    final hasLowMargin = line.marginRate < 0.15;
+    final belowMinPrice = line.unitPrice < line.minUnitPrice;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.panelBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            '${line.productSku} • ${line.productName}',
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+              color: AppColors.black,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '${line.quantity} ${line.unit} x ${currency.format(line.unitPrice)}',
+          ),
+          Text(
+            'Total linea: ${currency.format(line.lineTotal)} • Margen ${(line.marginRate * 100).toStringAsFixed(1)}%',
+          ),
+          if (hasLowMargin)
+            Text(
+              'Advertencia: margen bajo (<15%).',
+              style: TextStyle(
+                color: Colors.orange.shade900,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          if (belowMinPrice)
+            Text(
+              'Advertencia: precio por debajo del minimo permitido.',
+              style: TextStyle(
+                color: Colors.red.shade900,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+        ],
       ),
     );
   }

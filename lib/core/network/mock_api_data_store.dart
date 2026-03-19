@@ -6,12 +6,14 @@ class MockApiDataStore {
   MockApiDataStore._({
     required List<Map<String, dynamic>> customers,
     required List<Map<String, dynamic>> leads,
+    required List<Map<String, dynamic>> products,
     required List<Map<String, dynamic>> opportunities,
     required List<Map<String, dynamic>> quotes,
     required List<Map<String, dynamic>> tasks,
     required List<Map<String, dynamic>> activities,
   }) : _customers = customers,
        _leads = leads,
+       _products = products,
        _opportunities = opportunities,
        _quotes = quotes,
        _tasks = tasks,
@@ -77,6 +79,74 @@ class MockApiDataStore {
           'owner': 'Mariana Solis',
         },
       ],
+      products: <Map<String, dynamic>>[
+        {
+          'id': 'prd-001',
+          'sku': 'TUB-C40-4M',
+          'name': 'Tuberia acero cedula 40 4"',
+          'category': 'Tuberia',
+          'unit': 'tramo 6m',
+          'stock': 120,
+          'list_price': 7800.0,
+          'min_price': 7000.0,
+          'unit_cost': 5600.0,
+        },
+        {
+          'id': 'prd-002',
+          'sku': 'VAL-COM-2',
+          'name': 'Valvula compuerta acero 2"',
+          'category': 'Valvula',
+          'unit': 'pieza',
+          'stock': 85,
+          'list_price': 9400.0,
+          'min_price': 8600.0,
+          'unit_cost': 6800.0,
+        },
+        {
+          'id': 'prd-003',
+          'sku': 'CON-BRI-4',
+          'name': 'Brida ASTM A105 4"',
+          'category': 'Conexion',
+          'unit': 'pieza',
+          'stock': 210,
+          'list_price': 780.0,
+          'min_price': 700.0,
+          'unit_cost': 500.0,
+        },
+        {
+          'id': 'prd-004',
+          'sku': 'EMP-NBR-4',
+          'name': 'Empaque NBR 4"',
+          'category': 'Accesorio',
+          'unit': 'pieza',
+          'stock': 300,
+          'list_price': 120.0,
+          'min_price': 100.0,
+          'unit_cost': 60.0,
+        },
+        {
+          'id': 'prd-005',
+          'sku': 'TUB-GAL-2',
+          'name': 'Tuberia galvanizada 2"',
+          'category': 'Tuberia',
+          'unit': 'tramo 6m',
+          'stock': 95,
+          'list_price': 4200.0,
+          'min_price': 3800.0,
+          'unit_cost': 2950.0,
+        },
+        {
+          'id': 'prd-006',
+          'sku': 'VAL-BOL-3',
+          'name': 'Valvula de bola inox 3"',
+          'category': 'Valvula',
+          'unit': 'pieza',
+          'stock': 38,
+          'list_price': 12800.0,
+          'min_price': 11500.0,
+          'unit_cost': 9300.0,
+        },
+      ],
       opportunities: <Map<String, dynamic>>[
         {
           'id': 'opp-001',
@@ -114,13 +184,64 @@ class MockApiDataStore {
           'related_type': 'opportunity',
           'related_id': 'opp-001',
           'status': 'Enviada',
-          'items_count': 6,
-          'subtotal': 220000.0,
-          'discount': 8000.0,
-          'tax': 33920.0,
-          'total': 245920.0,
+          'items_count': 3,
+          'subtotal': 184000.0,
+          'discount': 4560.0,
+          'tax': 28710.4,
+          'total': 208150.4,
           'valid_until': '2026-03-30',
           'created_at': '2026-03-18',
+          'margin_rate': 0.2655,
+          'lines': <Map<String, dynamic>>[
+            {
+              'product_id': 'prd-001',
+              'product_sku': 'TUB-C40-4M',
+              'product_name': 'Tuberia acero cedula 40 4"',
+              'product_category': 'Tuberia',
+              'unit': 'tramo 6m',
+              'quantity': 20,
+              'unit_price': 7600.0,
+              'min_unit_price': 7000.0,
+              'unit_cost': 5600.0,
+              'stock_available': 120,
+              'line_subtotal': 152000.0,
+              'line_discount': 4560.0,
+              'line_total': 147440.0,
+              'margin_rate': 0.2404,
+            },
+            {
+              'product_id': 'prd-003',
+              'product_sku': 'CON-BRI-4',
+              'product_name': 'Brida ASTM A105 4"',
+              'product_category': 'Conexion',
+              'unit': 'pieza',
+              'quantity': 30,
+              'unit_price': 760.0,
+              'min_unit_price': 700.0,
+              'unit_cost': 500.0,
+              'stock_available': 210,
+              'line_subtotal': 22800.0,
+              'line_discount': 0.0,
+              'line_total': 22800.0,
+              'margin_rate': 0.3421,
+            },
+            {
+              'product_id': 'prd-004',
+              'product_sku': 'EMP-NBR-4',
+              'product_name': 'Empaque NBR 4"',
+              'product_category': 'Accesorio',
+              'unit': 'pieza',
+              'quantity': 80,
+              'unit_price': 115.0,
+              'min_unit_price': 100.0,
+              'unit_cost': 60.0,
+              'stock_available': 300,
+              'line_subtotal': 9200.0,
+              'line_discount': 0.0,
+              'line_total': 9200.0,
+              'margin_rate': 0.4783,
+            },
+          ],
         },
         {
           'id': 'quo-002',
@@ -129,13 +250,48 @@ class MockApiDataStore {
           'related_type': 'opportunity',
           'related_id': 'opp-002',
           'status': 'Aprobada',
-          'items_count': 4,
-          'subtotal': 94000.0,
-          'discount': 3500.0,
-          'tax': 14480.0,
-          'total': 104980.0,
+          'items_count': 2,
+          'subtotal': 89000.0,
+          'discount': 1880.0,
+          'tax': 13939.2,
+          'total': 101059.2,
           'valid_until': '2026-03-27',
           'created_at': '2026-03-17',
+          'margin_rate': 0.2644,
+          'lines': <Map<String, dynamic>>[
+            {
+              'product_id': 'prd-002',
+              'product_sku': 'VAL-COM-2',
+              'product_name': 'Valvula compuerta acero 2"',
+              'product_category': 'Valvula',
+              'unit': 'pieza',
+              'quantity': 8,
+              'unit_price': 9200.0,
+              'min_unit_price': 8600.0,
+              'unit_cost': 6800.0,
+              'stock_available': 85,
+              'line_subtotal': 73600.0,
+              'line_discount': 0.0,
+              'line_total': 73600.0,
+              'margin_rate': 0.2609,
+            },
+            {
+              'product_id': 'prd-003',
+              'product_sku': 'CON-BRI-4',
+              'product_name': 'Brida ASTM A105 4"',
+              'product_category': 'Conexion',
+              'unit': 'pieza',
+              'quantity': 20,
+              'unit_price': 770.0,
+              'min_unit_price': 700.0,
+              'unit_cost': 500.0,
+              'stock_available': 210,
+              'line_subtotal': 15400.0,
+              'line_discount': 1880.0,
+              'line_total': 13520.0,
+              'margin_rate': 0.2604,
+            },
+          ],
         },
         {
           'id': 'quo-003',
@@ -144,13 +300,48 @@ class MockApiDataStore {
           'related_type': 'lead',
           'related_id': 'lead-001',
           'status': 'Borrador',
-          'items_count': 3,
-          'subtotal': 78000.0,
+          'items_count': 2,
+          'subtotal': 69600.0,
           'discount': 0.0,
-          'tax': 12480.0,
-          'total': 90480.0,
+          'tax': 11136.0,
+          'total': 80736.0,
           'valid_until': '2026-03-31',
           'created_at': '2026-03-19',
+          'margin_rate': 0.2862,
+          'lines': <Map<String, dynamic>>[
+            {
+              'product_id': 'prd-005',
+              'product_sku': 'TUB-GAL-2',
+              'product_name': 'Tuberia galvanizada 2"',
+              'product_category': 'Tuberia',
+              'unit': 'tramo 6m',
+              'quantity': 12,
+              'unit_price': 4100.0,
+              'min_unit_price': 3800.0,
+              'unit_cost': 2950.0,
+              'stock_available': 95,
+              'line_subtotal': 49200.0,
+              'line_discount': 0.0,
+              'line_total': 49200.0,
+              'margin_rate': 0.1366,
+            },
+            {
+              'product_id': 'prd-006',
+              'product_sku': 'VAL-BOL-3',
+              'product_name': 'Valvula de bola inox 3"',
+              'product_category': 'Valvula',
+              'unit': 'pieza',
+              'quantity': 2,
+              'unit_price': 10200.0,
+              'min_unit_price': 11500.0,
+              'unit_cost': 9300.0,
+              'stock_available': 38,
+              'line_subtotal': 20400.0,
+              'line_discount': 0.0,
+              'line_total': 20400.0,
+              'margin_rate': 0.0882,
+            },
+          ],
         },
       ],
       tasks: <Map<String, dynamic>>[
@@ -208,6 +399,7 @@ class MockApiDataStore {
 
   final List<Map<String, dynamic>> _customers;
   final List<Map<String, dynamic>> _leads;
+  final List<Map<String, dynamic>> _products;
   final List<Map<String, dynamic>> _opportunities;
   final List<Map<String, dynamic>> _quotes;
   final List<Map<String, dynamic>> _tasks;
@@ -223,14 +415,17 @@ class MockApiDataStore {
         .where((task) => task['completed'] as bool == false)
         .length;
     final now = DateTime.now();
-    final quotesThisMonth = _quotes.where((quote) {
-      final createdRaw = quote['created_at'] as String? ?? '';
-      final createdAt = DateTime.tryParse(createdRaw);
-      if (createdAt == null) {
-        return false;
-      }
-      return createdAt.year == now.year && createdAt.month == now.month;
-    }).length;
+    final monthQuotes = _quotes
+        .where((quote) {
+          final createdRaw = quote['created_at'] as String? ?? '';
+          final createdAt = DateTime.tryParse(createdRaw);
+          if (createdAt == null) {
+            return false;
+          }
+          return createdAt.year == now.year && createdAt.month == now.month;
+        })
+        .toList(growable: false);
+    final quotesThisMonth = monthQuotes.length;
 
     final approvedQuotes = _quotes
         .where(
@@ -245,6 +440,24 @@ class MockApiDataStore {
     final approvalRate = _quotes.isEmpty
         ? 0.0
         : approvedQuotes.length / _quotes.length;
+    final byProduct = <String, ({String name, int quantity})>{};
+    for (final quote in monthQuotes) {
+      final lines = (quote['lines'] as List<dynamic>? ?? <dynamic>[])
+          .whereType<Map<String, dynamic>>()
+          .toList(growable: false);
+      for (final line in lines) {
+        final productId = line['product_id'] as String? ?? '';
+        final productName = line['product_name'] as String? ?? 'Producto';
+        final quantity = (line['quantity'] as num?)?.toInt() ?? 0;
+        final current = byProduct[productId];
+        byProduct[productId] = current == null
+            ? (name: productName, quantity: quantity)
+            : (name: current.name, quantity: current.quantity + quantity);
+      }
+    }
+
+    final topProducts = byProduct.entries.toList(growable: false)
+      ..sort((a, b) => b.value.quantity.compareTo(a.value.quantity));
 
     return <String, dynamic>{
       'total_customers': _customers.length,
@@ -256,6 +469,15 @@ class MockApiDataStore {
       'quotes_this_month': quotesThisMonth,
       'quotes_approval_rate': approvalRate,
       'quotes_approved_amount': approvedAmount,
+      'top_quoted_products': topProducts
+          .take(3)
+          .map(
+            (entry) => <String, dynamic>{
+              'product_name': entry.value.name,
+              'quantity': entry.value.quantity,
+            },
+          )
+          .toList(growable: false),
     };
   }
 
@@ -271,6 +493,33 @@ class MockApiDataStore {
               (item['name'] as String).toLowerCase().contains(normalizedQuery),
         )
         .toList(growable: false);
+
+    return <String, dynamic>{'items': filtered};
+  }
+
+  Map<String, dynamic> getProducts({String? query, String? category}) {
+    var filtered = _products;
+
+    if (query != null && query.trim().isNotEmpty) {
+      final normalized = query.toLowerCase().trim();
+      filtered = filtered
+          .where(
+            (item) =>
+                (item['name'] as String).toLowerCase().contains(normalized) ||
+                (item['sku'] as String).toLowerCase().contains(normalized),
+          )
+          .toList(growable: false);
+    }
+
+    if (category != null && category.trim().isNotEmpty) {
+      filtered = filtered
+          .where(
+            (item) =>
+                (item['category'] as String).toLowerCase() ==
+                category.toLowerCase(),
+          )
+          .toList(growable: false);
+    }
 
     return <String, dynamic>{'items': filtered};
   }
@@ -320,23 +569,109 @@ class MockApiDataStore {
     required String customerName,
     required String relatedType,
     required String relatedId,
-    required int itemsCount,
-    required double subtotal,
-    required double discount,
-    required double tax,
+    required List<Map<String, dynamic>> lines,
+    required double taxRate,
     required String validUntil,
   }) {
-    if (customerName.trim().isEmpty || relatedId.trim().isEmpty) {
+    if (customerName.trim().isEmpty ||
+        relatedId.trim().isEmpty ||
+        lines.isEmpty) {
       return <String, dynamic>{
         'ok': false,
-        'message': 'Cliente e ID relacionado son obligatorios.',
+        'message': 'Cliente, relacionado y lineas son obligatorios.',
         'item': <String, dynamic>{},
       };
     }
 
+    final normalizedLines = <Map<String, dynamic>>[];
+    var subtotal = 0.0;
+    var discount = 0.0;
+    var marginRevenue = 0.0;
+    var marginCost = 0.0;
+    for (final line in lines) {
+      final productId = line['product_id'] as String? ?? '';
+      final quantity = (line['quantity'] as num?)?.toInt() ?? 0;
+      final unitPrice = (line['unit_price'] as num?)?.toDouble() ?? 0;
+      final discountRate = ((line['discount_rate'] as num?)?.toDouble() ?? 0)
+          .clamp(0.0, 0.8);
+      final productIndex = _products.indexWhere(
+        (item) => item['id'] == productId,
+      );
+      final product = productIndex == -1 ? null : _products[productIndex];
+
+      if (product == null) {
+        return <String, dynamic>{
+          'ok': false,
+          'message': 'Producto no encontrado en catalogo.',
+          'item': <String, dynamic>{},
+        };
+      }
+
+      if (quantity <= 0) {
+        return <String, dynamic>{
+          'ok': false,
+          'message': 'La cantidad debe ser mayor a cero.',
+          'item': <String, dynamic>{},
+        };
+      }
+
+      final stock = (product['stock'] as num?)?.toInt() ?? 0;
+      final minPrice = (product['min_price'] as num?)?.toDouble() ?? 0;
+      final unitCost = (product['unit_cost'] as num?)?.toDouble() ?? 0;
+      if (quantity > stock) {
+        return <String, dynamic>{
+          'ok': false,
+          'message': 'Stock insuficiente para ${product['name']}.',
+          'item': <String, dynamic>{},
+        };
+      }
+      if (unitPrice < minPrice) {
+        return <String, dynamic>{
+          'ok': false,
+          'message':
+              'Precio debajo del minimo para ${product['name']} (${_moneyCompact(minPrice)}).',
+          'item': <String, dynamic>{},
+        };
+      }
+
+      final lineSubtotal = quantity * unitPrice;
+      final lineDiscount = lineSubtotal * discountRate;
+      final lineTotal = lineSubtotal - lineDiscount;
+      final lineCost = quantity * unitCost;
+      final marginRate = lineTotal <= 0
+          ? 0.0
+          : (lineTotal - lineCost) / lineTotal;
+
+      normalizedLines.add(<String, dynamic>{
+        'product_id': product['id'],
+        'product_sku': product['sku'],
+        'product_name': product['name'],
+        'product_category': product['category'],
+        'unit': product['unit'],
+        'quantity': quantity,
+        'unit_price': unitPrice,
+        'min_unit_price': minPrice,
+        'unit_cost': unitCost,
+        'stock_available': stock,
+        'line_subtotal': lineSubtotal,
+        'line_discount': lineDiscount,
+        'line_total': lineTotal,
+        'margin_rate': marginRate,
+      });
+      subtotal += lineSubtotal;
+      discount += lineDiscount;
+      marginRevenue += lineTotal;
+      marginCost += lineCost;
+    }
+
+    final taxableBase = max(0.0, subtotal - discount);
+    final tax = taxableBase * taxRate.clamp(0.0, 0.35);
+    final total = taxableBase + tax;
+    final marginRate = marginRevenue <= 0
+        ? 0.0
+        : (marginRevenue - marginCost) / marginRevenue;
     final quoteNumber = _quotes.length + 1;
     final id = 'quo-${DateTime.now().microsecondsSinceEpoch}';
-    final total = subtotal - discount + tax;
     final item = <String, dynamic>{
       'id': id,
       'code': 'COT-2026-${quoteNumber.toString().padLeft(3, '0')}',
@@ -344,7 +679,7 @@ class MockApiDataStore {
       'related_type': relatedType.trim().isEmpty ? 'lead' : relatedType.trim(),
       'related_id': relatedId.trim(),
       'status': 'Borrador',
-      'items_count': max(1, itemsCount),
+      'items_count': normalizedLines.length,
       'subtotal': subtotal,
       'discount': discount,
       'tax': tax,
@@ -353,6 +688,8 @@ class MockApiDataStore {
           ? '2026-03-30'
           : validUntil.trim(),
       'created_at': DateTime.now().toIso8601String().split('T').first,
+      'margin_rate': marginRate,
+      'lines': normalizedLines,
     };
 
     _quotes.insert(0, item);

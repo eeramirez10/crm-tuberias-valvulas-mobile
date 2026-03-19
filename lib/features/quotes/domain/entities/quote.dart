@@ -1,3 +1,5 @@
+import 'quote_line.dart';
+
 enum QuoteStatus { draft, sent, approved, rejected, converted }
 
 extension QuoteStatusX on QuoteStatus {
@@ -44,6 +46,8 @@ class Quote {
     required this.total,
     required this.validUntil,
     required this.createdAt,
+    required this.lines,
+    required this.marginRate,
   });
 
   final String id;
@@ -59,4 +63,6 @@ class Quote {
   final double total;
   final String validUntil;
   final String createdAt;
+  final List<QuoteLine> lines;
+  final double marginRate;
 }

@@ -1,5 +1,29 @@
 import '../../domain/entities/dashboard_summary.dart';
 
+class DashboardTopQuotedProductDto {
+  const DashboardTopQuotedProductDto({
+    required this.productName,
+    required this.quantity,
+  });
+
+  final String productName;
+  final int quantity;
+
+  factory DashboardTopQuotedProductDto.fromJson(Map<String, dynamic> json) {
+    return DashboardTopQuotedProductDto(
+      productName: json['product_name'] as String? ?? 'Producto',
+      quantity: (json['quantity'] as num?)?.toInt() ?? 0,
+    );
+  }
+
+  DashboardTopQuotedProduct toEntity() {
+    return DashboardTopQuotedProduct(
+      productName: productName,
+      quantity: quantity,
+    );
+  }
+}
+
 class GetDashboardSummaryResponseDto {
   const GetDashboardSummaryResponseDto({
     required this.totalCustomers,
@@ -11,6 +35,7 @@ class GetDashboardSummaryResponseDto {
     required this.quotesThisMonth,
     required this.quotesApprovalRate,
     required this.quotesApprovedAmount,
+    required this.topQuotedProducts,
   });
 
   final int totalCustomers;
@@ -22,6 +47,7 @@ class GetDashboardSummaryResponseDto {
   final int quotesThisMonth;
   final double quotesApprovalRate;
   final double quotesApprovedAmount;
+  final List<DashboardTopQuotedProductDto> topQuotedProducts;
 
   factory GetDashboardSummaryResponseDto.fromJson(Map<String, dynamic> json) {
     return GetDashboardSummaryResponseDto(
@@ -36,6 +62,11 @@ class GetDashboardSummaryResponseDto {
           (json['quotes_approval_rate'] as num?)?.toDouble() ?? 0,
       quotesApprovedAmount:
           (json['quotes_approved_amount'] as num?)?.toDouble() ?? 0,
+      topQuotedProducts:
+          (json['top_quoted_products'] as List<dynamic>? ?? <dynamic>[])
+              .whereType<Map<String, dynamic>>()
+              .map(DashboardTopQuotedProductDto.fromJson)
+              .toList(growable: false),
     );
   }
 
@@ -50,6 +81,9 @@ class GetDashboardSummaryResponseDto {
       quotesThisMonth: quotesThisMonth,
       quotesApprovalRate: quotesApprovalRate,
       quotesApprovedAmount: quotesApprovedAmount,
+      topQuotedProducts: topQuotedProducts
+          .map((item) => item.toEntity())
+          .toList(growable: false),
     );
   }
 }

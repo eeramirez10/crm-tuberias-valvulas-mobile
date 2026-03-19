@@ -1,4 +1,5 @@
 import '../../domain/entities/quote.dart';
+import 'quote_line_item_dto.dart';
 
 class QuoteItemDto {
   const QuoteItemDto({
@@ -15,6 +16,8 @@ class QuoteItemDto {
     required this.total,
     required this.validUntil,
     required this.createdAt,
+    required this.marginRate,
+    required this.lines,
   });
 
   final String id;
@@ -30,8 +33,14 @@ class QuoteItemDto {
   final double total;
   final String validUntil;
   final String createdAt;
+  final double marginRate;
+  final List<QuoteLineItemDto> lines;
 
   factory QuoteItemDto.fromJson(Map<String, dynamic> json) {
+    final rawLines = (json['lines'] as List<dynamic>? ?? <dynamic>[])
+        .whereType<Map<String, dynamic>>()
+        .toList(growable: false);
+
     return QuoteItemDto(
       id: json['id'] as String? ?? '',
       code: json['code'] as String? ?? '',
@@ -46,6 +55,8 @@ class QuoteItemDto {
       total: (json['total'] as num?)?.toDouble() ?? 0,
       validUntil: json['valid_until'] as String? ?? '',
       createdAt: json['created_at'] as String? ?? '',
+      marginRate: (json['margin_rate'] as num?)?.toDouble() ?? 0,
+      lines: rawLines.map(QuoteLineItemDto.fromJson).toList(growable: false),
     );
   }
 
@@ -64,6 +75,8 @@ class QuoteItemDto {
       total: total,
       validUntil: validUntil,
       createdAt: createdAt,
+      marginRate: marginRate,
+      lines: lines.map((line) => line.toEntity()).toList(growable: false),
     );
   }
 }
