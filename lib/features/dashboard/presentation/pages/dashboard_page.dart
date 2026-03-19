@@ -102,6 +102,16 @@ class DashboardPage extends ConsumerWidget {
             const SizedBox(height: 12),
             summaryState.when(
               data: (summary) => _SectionCard(
+                title: 'Pedidos del mes',
+                child: _OrdersKpiRow(summary: summary),
+              ),
+              loading: () => const _LoadingCard(height: 90),
+              error: (_, _) =>
+                  const _ErrorCard(message: 'No se pudo cargar pedidos.'),
+            ),
+            const SizedBox(height: 12),
+            summaryState.when(
+              data: (summary) => _SectionCard(
                 title: 'Top productos cotizados',
                 child: _TopProductsList(items: summary.topQuotedProducts),
               ),
@@ -237,6 +247,46 @@ class _TopProductsList extends StatelessWidget {
             ),
           )
           .toList(growable: false),
+    );
+  }
+}
+
+class _OrdersKpiRow extends StatelessWidget {
+  const _OrdersKpiRow({required this.summary});
+
+  final DashboardSummary summary;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: <Widget>[
+        Expanded(
+          child: _RiskPill(
+            label: 'Pedidos',
+            value: summary.ordersThisMonth,
+            background: Colors.lightBlue.shade100,
+            foreground: Colors.blue.shade900,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _KpiAmountPill(
+            label: 'Entrega a tiempo',
+            value: '${(summary.ordersOnTimeRate * 100).toStringAsFixed(0)}%',
+            background: Colors.green.shade100,
+            foreground: Colors.green.shade900,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _RiskPill(
+            label: 'Backlog',
+            value: summary.ordersBacklog,
+            background: Colors.orange.shade100,
+            foreground: Colors.orange.shade900,
+          ),
+        ),
+      ],
     );
   }
 }

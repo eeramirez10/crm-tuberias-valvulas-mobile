@@ -10,6 +10,8 @@ import '../../features/customers/presentation/pages/customers_page.dart';
 import '../../features/dashboard/presentation/pages/dashboard_page.dart';
 import '../../features/leads/presentation/pages/lead_details_page.dart';
 import '../../features/leads/presentation/pages/leads_page.dart';
+import '../../features/orders/presentation/pages/order_details_page.dart';
+import '../../features/orders/presentation/pages/orders_page.dart';
 import '../../features/opportunities/presentation/pages/pipeline_page.dart';
 import '../../features/products/presentation/pages/products_page.dart';
 import '../../features/quotes/presentation/pages/quote_details_page.dart';
@@ -89,6 +91,23 @@ GoRouter appRouter(Ref ref) {
                       final customerId =
                           state.pathParameters['customerId'] ?? '';
                       return CustomerDetailsPage(customerId: customerId);
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: <RouteBase>[
+              GoRoute(
+                path: '/orders',
+                builder: (context, state) => const OrdersPage(),
+                routes: <RouteBase>[
+                  GoRoute(
+                    path: ':orderId',
+                    builder: (context, state) {
+                      final orderId = state.pathParameters['orderId'] ?? '';
+                      return OrderDetailsPage(orderId: orderId);
                     },
                   ),
                 ],
@@ -257,16 +276,23 @@ class _ShellScaffold extends StatelessWidget {
                   const SizedBox(height: 8),
                   _MenuTile(
                     selected: navigationShell.currentIndex == 5,
-                    icon: Icons.inventory_2_rounded,
-                    label: 'Catalogo',
+                    icon: Icons.local_shipping_rounded,
+                    label: 'Pedidos',
                     onTap: () => _goTo(5, context),
                   ),
                   const SizedBox(height: 8),
                   _MenuTile(
                     selected: navigationShell.currentIndex == 6,
+                    icon: Icons.inventory_2_rounded,
+                    label: 'Catalogo',
+                    onTap: () => _goTo(6, context),
+                  ),
+                  const SizedBox(height: 8),
+                  _MenuTile(
+                    selected: navigationShell.currentIndex == 7,
                     icon: Icons.auto_awesome_rounded,
                     label: 'Asistente IA',
-                    onTap: () => _goTo(6, context),
+                    onTap: () => _goTo(7, context),
                   ),
                   const SizedBox(height: 12),
                   const Divider(height: 1),

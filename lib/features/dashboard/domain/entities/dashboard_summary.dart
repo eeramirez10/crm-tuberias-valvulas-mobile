@@ -19,6 +19,9 @@ class DashboardSummary {
     required this.quotesThisMonth,
     required this.quotesApprovalRate,
     required this.quotesApprovedAmount,
+    required this.ordersThisMonth,
+    required this.ordersOnTimeRate,
+    required this.ordersBacklog,
     required this.topQuotedProducts,
   });
 
@@ -31,5 +34,8 @@ class DashboardSummary {
   final int quotesThisMonth;
   final double quotesApprovalRate;
   final double quotesApprovedAmount;
+  final int ordersThisMonth;
+  final double ordersOnTimeRate;
+  final int ordersBacklog;
   final List<DashboardTopQuotedProduct> topQuotedProducts;
 }

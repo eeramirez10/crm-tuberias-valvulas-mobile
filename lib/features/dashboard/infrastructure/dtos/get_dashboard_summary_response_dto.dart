@@ -35,6 +35,9 @@ class GetDashboardSummaryResponseDto {
     required this.quotesThisMonth,
     required this.quotesApprovalRate,
     required this.quotesApprovedAmount,
+    required this.ordersThisMonth,
+    required this.ordersOnTimeRate,
+    required this.ordersBacklog,
     required this.topQuotedProducts,
   });
 
@@ -47,6 +50,9 @@ class GetDashboardSummaryResponseDto {
   final int quotesThisMonth;
   final double quotesApprovalRate;
   final double quotesApprovedAmount;
+  final int ordersThisMonth;
+  final double ordersOnTimeRate;
+  final int ordersBacklog;
   final List<DashboardTopQuotedProductDto> topQuotedProducts;
 
   factory GetDashboardSummaryResponseDto.fromJson(Map<String, dynamic> json) {
@@ -62,6 +68,9 @@ class GetDashboardSummaryResponseDto {
           (json['quotes_approval_rate'] as num?)?.toDouble() ?? 0,
       quotesApprovedAmount:
           (json['quotes_approved_amount'] as num?)?.toDouble() ?? 0,
+      ordersThisMonth: (json['orders_this_month'] as num?)?.toInt() ?? 0,
+      ordersOnTimeRate: (json['orders_on_time_rate'] as num?)?.toDouble() ?? 0,
+      ordersBacklog: (json['orders_backlog'] as num?)?.toInt() ?? 0,
       topQuotedProducts:
           (json['top_quoted_products'] as List<dynamic>? ?? <dynamic>[])
               .whereType<Map<String, dynamic>>()
@@ -81,6 +90,9 @@ class GetDashboardSummaryResponseDto {
       quotesThisMonth: quotesThisMonth,
       quotesApprovalRate: quotesApprovalRate,
       quotesApprovedAmount: quotesApprovedAmount,
+      ordersThisMonth: ordersThisMonth,
+      ordersOnTimeRate: ordersOnTimeRate,
+      ordersBacklog: ordersBacklog,
       topQuotedProducts: topQuotedProducts
           .map((item) => item.toEntity())
           .toList(growable: false),

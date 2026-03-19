@@ -8,6 +8,7 @@ import '../../../../core/design_system/app_toast.dart';
 import '../../../../core/design_system/crm_page_shell.dart';
 import '../../../activities/presentation/providers/activities_providers.dart';
 import '../../../dashboard/presentation/providers/dashboard_providers.dart';
+import '../../../orders/presentation/providers/orders_providers.dart';
 import '../../../tasks/presentation/providers/tasks_providers.dart';
 import '../../domain/entities/quote.dart';
 import '../../domain/entities/quote_line.dart';
@@ -261,6 +262,7 @@ class QuoteDetailsPage extends ConsumerWidget {
                                               'Cotizacion ${quote.code} convertida a pedido ${result.orderId}.',
                                         );
                                     ref.invalidate(dashboardSummaryProvider);
+                                    ref.invalidate(ordersControllerProvider);
                                     ref.invalidate(
                                       quoteDetailsProvider(quoteId),
                                     );

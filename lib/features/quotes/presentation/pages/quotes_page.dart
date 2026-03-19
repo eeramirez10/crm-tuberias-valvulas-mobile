@@ -8,6 +8,7 @@ import '../../../../core/design_system/app_toast.dart';
 import '../../../../core/design_system/crm_page_shell.dart';
 import '../../../activities/presentation/providers/activities_providers.dart';
 import '../../../dashboard/presentation/providers/dashboard_providers.dart';
+import '../../../orders/presentation/providers/orders_providers.dart';
 import '../../../products/domain/entities/product.dart';
 import '../../../products/presentation/providers/products_providers.dart';
 import '../../../tasks/presentation/providers/tasks_providers.dart';
@@ -752,6 +753,7 @@ class _QuoteCard extends ConsumerWidget {
                                       'Cotizacion ${quote.code} convertida a pedido ${result.orderId}.',
                                 );
                             ref.invalidate(dashboardSummaryProvider);
+                            ref.invalidate(ordersControllerProvider);
 
                             if (context.mounted) {
                               AppToast.success(

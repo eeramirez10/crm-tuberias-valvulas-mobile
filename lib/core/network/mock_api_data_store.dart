@@ -9,6 +9,7 @@ class MockApiDataStore {
     required List<Map<String, dynamic>> products,
     required List<Map<String, dynamic>> opportunities,
     required List<Map<String, dynamic>> quotes,
+    required List<Map<String, dynamic>> orders,
     required List<Map<String, dynamic>> tasks,
     required List<Map<String, dynamic>> activities,
   }) : _customers = customers,
@@ -16,6 +17,7 @@ class MockApiDataStore {
        _products = products,
        _opportunities = opportunities,
        _quotes = quotes,
+       _orders = orders,
        _tasks = tasks,
        _activities = activities;
 
@@ -97,7 +99,7 @@ class MockApiDataStore {
           'name': 'Valvula compuerta acero 2"',
           'category': 'Valvula',
           'unit': 'pieza',
-          'stock': 85,
+          'stock': 77,
           'list_price': 9400.0,
           'min_price': 8600.0,
           'unit_cost': 6800.0,
@@ -108,7 +110,7 @@ class MockApiDataStore {
           'name': 'Brida ASTM A105 4"',
           'category': 'Conexion',
           'unit': 'pieza',
-          'stock': 210,
+          'stock': 190,
           'list_price': 780.0,
           'min_price': 700.0,
           'unit_cost': 500.0,
@@ -249,7 +251,8 @@ class MockApiDataStore {
           'customer_name': 'Mantenimiento Industrial Norte',
           'related_type': 'opportunity',
           'related_id': 'opp-002',
-          'status': 'Aprobada',
+          'status': 'Convertida',
+          'order_id': 'ord-001',
           'items_count': 2,
           'subtotal': 89000.0,
           'discount': 1880.0,
@@ -344,6 +347,46 @@ class MockApiDataStore {
           ],
         },
       ],
+      orders: <Map<String, dynamic>>[
+        {
+          'id': 'ord-001',
+          'code': 'PED-2026-001',
+          'quote_id': 'quo-002',
+          'quote_code': 'COT-2026-002',
+          'customer_name': 'Mantenimiento Industrial Norte',
+          'status': 'Enviado',
+          'total': 101059.2,
+          'created_at': '2026-03-18',
+          'promised_date': '2026-03-24',
+          'shipped_at': '2026-03-22',
+          'delivered_at': null,
+          'inventory_reserved': true,
+          'lines': <Map<String, dynamic>>[
+            {
+              'product_id': 'prd-002',
+              'product_sku': 'VAL-COM-2',
+              'product_name': 'Valvula compuerta acero 2"',
+              'product_category': 'Valvula',
+              'unit': 'pieza',
+              'quantity': 8,
+              'unit_price': 9200.0,
+              'line_total': 73600.0,
+              'stock_available': 77,
+            },
+            {
+              'product_id': 'prd-003',
+              'product_sku': 'CON-BRI-4',
+              'product_name': 'Brida ASTM A105 4"',
+              'product_category': 'Conexion',
+              'unit': 'pieza',
+              'quantity': 20,
+              'unit_price': 770.0,
+              'line_total': 13520.0,
+              'stock_available': 190,
+            },
+          ],
+        },
+      ],
       tasks: <Map<String, dynamic>>[
         {
           'id': 'task-001',
@@ -402,6 +445,7 @@ class MockApiDataStore {
   final List<Map<String, dynamic>> _products;
   final List<Map<String, dynamic>> _opportunities;
   final List<Map<String, dynamic>> _quotes;
+  final List<Map<String, dynamic>> _orders;
   final List<Map<String, dynamic>> _tasks;
   final List<Map<String, dynamic>> _activities;
 
@@ -458,6 +502,41 @@ class MockApiDataStore {
 
     final topProducts = byProduct.entries.toList(growable: false)
       ..sort((a, b) => b.value.quantity.compareTo(a.value.quantity));
+    final monthOrders = _orders
+        .where((order) {
+          final created = DateTime.tryParse(
+            order['created_at'] as String? ?? '',
+          );
+          if (created == null) {
+            return false;
+          }
+          return created.year == now.year && created.month == now.month;
+        })
+        .toList(growable: false);
+    final deliveredOrders = _orders
+        .where((order) => order['status'] == 'Entregado')
+        .toList(growable: false);
+    final deliveredOnTime = deliveredOrders.where((order) {
+      final promised = DateTime.tryParse(
+        order['promised_date'] as String? ?? '',
+      );
+      final delivered = DateTime.tryParse(
+        order['delivered_at'] as String? ?? '',
+      );
+      if (promised == null || delivered == null) {
+        return false;
+      }
+      return delivered.isBefore(promised.add(const Duration(days: 1)));
+    }).length;
+    final onTimeRate = deliveredOrders.isEmpty
+        ? 0.0
+        : deliveredOnTime / deliveredOrders.length;
+    final ordersBacklog = _orders
+        .where(
+          (order) =>
+              order['status'] == 'Nuevo' || order['status'] == 'En surtido',
+        )
+        .length;
 
     return <String, dynamic>{
       'total_customers': _customers.length,
@@ -469,6 +548,9 @@ class MockApiDataStore {
       'quotes_this_month': quotesThisMonth,
       'quotes_approval_rate': approvalRate,
       'quotes_approved_amount': approvedAmount,
+      'orders_this_month': monthOrders.length,
+      'orders_on_time_rate': onTimeRate,
+      'orders_backlog': ordersBacklog,
       'top_quoted_products': topProducts
           .take(3)
           .map(
@@ -563,6 +645,25 @@ class MockApiDataStore {
       return <String, dynamic>{'item': <String, dynamic>{}};
     }
     return <String, dynamic>{'item': _quotes[index]};
+  }
+
+  Map<String, dynamic> getOrders({String? status}) {
+    if (status == null || status.trim().isEmpty) {
+      return <String, dynamic>{'items': _orders};
+    }
+
+    final filtered = _orders
+        .where((item) => (item['status'] as String?) == status)
+        .toList(growable: false);
+    return <String, dynamic>{'items': filtered};
+  }
+
+  Map<String, dynamic> getOrderById(String id) {
+    final index = _orders.indexWhere((order) => order['id'] == id);
+    if (index == -1) {
+      return <String, dynamic>{'item': <String, dynamic>{}};
+    }
+    return <String, dynamic>{'item': _orders[index]};
   }
 
   Map<String, dynamic> createQuote({
@@ -717,37 +818,234 @@ class MockApiDataStore {
   }
 
   Map<String, dynamic> convertQuoteToOrder(String id) {
-    final index = _quotes.indexWhere((quote) => quote['id'] == id);
-    if (index == -1) {
+    final quoteIndex = _quotes.indexWhere((quote) => quote['id'] == id);
+    if (quoteIndex == -1) {
       return <String, dynamic>{
         'ok': false,
         'message': 'Cotizacion no encontrada.',
       };
     }
 
-    if (_quotes[index]['status'] == 'Rechazada') {
+    final quote = _quotes[quoteIndex];
+    if (quote['status'] == 'Rechazada') {
       return <String, dynamic>{
         'ok': false,
         'message': 'No se puede convertir una cotizacion rechazada.',
       };
     }
 
-    final orderId = 'PED-${DateTime.now().millisecondsSinceEpoch}';
-    _quotes[index] = <String, dynamic>{
-      ..._quotes[index],
+    final existingOrderId = quote['order_id'] as String?;
+    if (existingOrderId != null && existingOrderId.isNotEmpty) {
+      return <String, dynamic>{'ok': true, 'order_id': existingOrderId};
+    }
+
+    final orderNumber = _orders.length + 1;
+    final orderId = 'ord-${DateTime.now().microsecondsSinceEpoch}';
+    final orderCode = 'PED-2026-${orderNumber.toString().padLeft(3, '0')}';
+    final rawLines = (quote['lines'] as List<dynamic>? ?? <dynamic>[])
+        .whereType<Map<String, dynamic>>()
+        .toList(growable: false);
+    final orderLines = rawLines
+        .map((line) {
+          final productId = line['product_id'] as String? ?? '';
+          final productIndex = _products.indexWhere(
+            (item) => item['id'] == productId,
+          );
+          final currentStock = productIndex == -1
+              ? 0
+              : (_products[productIndex]['stock'] as num?)?.toInt() ?? 0;
+
+          return <String, dynamic>{
+            'product_id': productId,
+            'product_sku': line['product_sku'] as String? ?? '',
+            'product_name': line['product_name'] as String? ?? '',
+            'product_category': line['product_category'] as String? ?? '',
+            'unit': line['unit'] as String? ?? '',
+            'quantity': (line['quantity'] as num?)?.toInt() ?? 0,
+            'unit_price': (line['unit_price'] as num?)?.toDouble() ?? 0,
+            'line_total': (line['line_total'] as num?)?.toDouble() ?? 0,
+            'stock_available': currentStock,
+          };
+        })
+        .toList(growable: false);
+
+    final promisedDate = quote['valid_until'] as String? ?? '';
+    _orders.insert(0, <String, dynamic>{
+      'id': orderId,
+      'code': orderCode,
+      'quote_id': quote['id'] as String? ?? '',
+      'quote_code': quote['code'] as String? ?? '',
+      'customer_name': quote['customer_name'] as String? ?? '',
+      'status': 'Nuevo',
+      'total': (quote['total'] as num?)?.toDouble() ?? 0,
+      'created_at': DateTime.now().toIso8601String().split('T').first,
+      'promised_date': promisedDate,
+      'shipped_at': null,
+      'delivered_at': null,
+      'inventory_reserved': false,
+      'lines': orderLines,
+    });
+
+    _quotes[quoteIndex] = <String, dynamic>{
+      ..._quotes[quoteIndex],
       'status': 'Convertida',
+      'order_id': orderId,
     };
 
     _activities.insert(0, <String, dynamic>{
       'id': 'act-${DateTime.now().microsecondsSinceEpoch}',
       'type': 'Pedido',
       'summary':
-          'Cotizacion ${_quotes[index]['code']} convertida a pedido $orderId.',
+          'Cotizacion ${_quotes[quoteIndex]['code']} convertida a pedido $orderCode.',
       'owner': 'Erick Ramirez',
       'created_at': DateTime.now().toUtc().toIso8601String(),
     });
 
     return <String, dynamic>{'ok': true, 'order_id': orderId};
+  }
+
+  Map<String, dynamic> updateOrderStatus({
+    required String id,
+    required String status,
+  }) {
+    final index = _orders.indexWhere((order) => order['id'] == id);
+    if (index == -1) {
+      return <String, dynamic>{'ok': false, 'message': 'Pedido no encontrado.'};
+    }
+
+    final normalizedStatus = status.trim().isEmpty ? 'Nuevo' : status.trim();
+    final current = _orders[index];
+    final currentStatus = current['status'] as String? ?? 'Nuevo';
+    var inventoryReserved = current['inventory_reserved'] as bool? ?? false;
+
+    if (normalizedStatus == currentStatus) {
+      return <String, dynamic>{'ok': true};
+    }
+
+    if (normalizedStatus == 'En surtido' && !inventoryReserved) {
+      final reserveResult = _reserveInventoryForOrder(index);
+      if (!(reserveResult['ok'] as bool? ?? false)) {
+        return reserveResult;
+      }
+      inventoryReserved = true;
+    }
+
+    if (normalizedStatus == 'Enviado' && !inventoryReserved) {
+      final reserveResult = _reserveInventoryForOrder(index);
+      if (!(reserveResult['ok'] as bool? ?? false)) {
+        return reserveResult;
+      }
+      inventoryReserved = true;
+    }
+
+    if (normalizedStatus == 'Cancelado' && inventoryReserved) {
+      _releaseInventoryForOrder(index);
+      inventoryReserved = false;
+    }
+
+    _orders[index] = <String, dynamic>{
+      ..._orders[index],
+      'status': normalizedStatus,
+      'inventory_reserved': inventoryReserved,
+      'shipped_at': normalizedStatus == 'Enviado'
+          ? DateTime.now().toIso8601String().split('T').first
+          : _orders[index]['shipped_at'],
+      'delivered_at': normalizedStatus == 'Entregado'
+          ? DateTime.now().toIso8601String().split('T').first
+          : _orders[index]['delivered_at'],
+    };
+
+    return <String, dynamic>{'ok': true};
+  }
+
+  Map<String, dynamic> _reserveInventoryForOrder(int orderIndex) {
+    final order = _orders[orderIndex];
+    final lines = (order['lines'] as List<dynamic>? ?? <dynamic>[])
+        .whereType<Map<String, dynamic>>()
+        .toList(growable: false);
+
+    final shortages = <String>[];
+    for (final line in lines) {
+      final productId = line['product_id'] as String? ?? '';
+      final qty = (line['quantity'] as num?)?.toInt() ?? 0;
+      final productIndex = _products.indexWhere(
+        (item) => item['id'] == productId,
+      );
+      if (productIndex == -1) {
+        shortages.add(line['product_name'] as String? ?? 'Producto');
+        continue;
+      }
+      final stock = (_products[productIndex]['stock'] as num?)?.toInt() ?? 0;
+      if (qty > stock) {
+        shortages.add("${line['product_name']} (faltan ${qty - stock})");
+      }
+    }
+
+    if (shortages.isNotEmpty) {
+      return <String, dynamic>{
+        'ok': false,
+        'message': 'Inventario insuficiente: ${shortages.join(', ')}',
+      };
+    }
+
+    final updatedLines = <Map<String, dynamic>>[];
+    for (final line in lines) {
+      final productId = line['product_id'] as String? ?? '';
+      final qty = (line['quantity'] as num?)?.toInt() ?? 0;
+      final productIndex = _products.indexWhere(
+        (item) => item['id'] == productId,
+      );
+      if (productIndex == -1) {
+        updatedLines.add(line);
+        continue;
+      }
+      final stock = (_products[productIndex]['stock'] as num?)?.toInt() ?? 0;
+      final nextStock = max(0, stock - qty);
+      _products[productIndex] = <String, dynamic>{
+        ..._products[productIndex],
+        'stock': nextStock,
+      };
+      updatedLines.add(<String, dynamic>{
+        ...line,
+        'stock_available': nextStock,
+      });
+    }
+
+    _orders[orderIndex] = <String, dynamic>{...order, 'lines': updatedLines};
+
+    return <String, dynamic>{'ok': true};
+  }
+
+  void _releaseInventoryForOrder(int orderIndex) {
+    final order = _orders[orderIndex];
+    final lines = (order['lines'] as List<dynamic>? ?? <dynamic>[])
+        .whereType<Map<String, dynamic>>()
+        .toList(growable: false);
+
+    final updatedLines = <Map<String, dynamic>>[];
+    for (final line in lines) {
+      final productId = line['product_id'] as String? ?? '';
+      final qty = (line['quantity'] as num?)?.toInt() ?? 0;
+      final productIndex = _products.indexWhere(
+        (item) => item['id'] == productId,
+      );
+      if (productIndex == -1) {
+        updatedLines.add(line);
+        continue;
+      }
+      final stock = (_products[productIndex]['stock'] as num?)?.toInt() ?? 0;
+      final nextStock = stock + qty;
+      _products[productIndex] = <String, dynamic>{
+        ..._products[productIndex],
+        'stock': nextStock,
+      };
+      updatedLines.add(<String, dynamic>{
+        ...line,
+        'stock_available': nextStock,
+      });
+    }
+
+    _orders[orderIndex] = <String, dynamic>{...order, 'lines': updatedLines};
   }
 
   Map<String, dynamic> updateOpportunityStage({

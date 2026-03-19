@@ -7,6 +7,7 @@ class ApiEndpoints {
   static const leads = '/leads';
   static const opportunities = '/opportunities';
   static const quotes = '/quotes';
+  static const orders = '/orders';
   static const tasks = '/tasks';
   static const activities = '/activities';
   static const aiInsights = '/ai/insights';
@@ -18,5 +19,7 @@ class ApiEndpoints {
   static String quoteById(String id) => '$quotes/$id';
   static String updateQuoteStatus(String id) => '$quotes/$id/status';
   static String convertQuoteToOrder(String id) => '$quotes/$id/convert-order';
+  static String orderById(String id) => '$orders/$id';
+  static String updateOrderStatus(String id) => '$orders/$id/status';
   static String completeTask(String id) => '$tasks/$id/complete';
 }

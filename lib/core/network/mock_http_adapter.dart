@@ -104,6 +104,31 @@ class MockHttpAdapter implements HttpAdapter {
       return _dataStore.convertQuoteToOrder(id);
     }
 
+    if (path == ApiEndpoints.orders && method == HttpMethod.get) {
+      return _dataStore.getOrders(
+        status: queryParameters?['status'] as String?,
+      );
+    }
+
+    if (path.startsWith('${ApiEndpoints.orders}/') &&
+        !path.endsWith('/status') &&
+        method == HttpMethod.get) {
+      final segments = path.split('/');
+      final id = segments[2];
+      return _dataStore.getOrderById(id);
+    }
+
+    if (path.startsWith('${ApiEndpoints.orders}/') &&
+        path.endsWith('/status') &&
+        method == HttpMethod.patch) {
+      final segments = path.split('/');
+      final id = segments[2];
+      return _dataStore.updateOrderStatus(
+        id: id,
+        status: (data?['status'] as String?) ?? '',
+      );
+    }
+
     if (path == ApiEndpoints.tasks && method == HttpMethod.get) {
       return _dataStore.getTasks(
         completed: queryParameters?['completed'] as bool?,
