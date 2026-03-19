@@ -374,7 +374,6 @@ class _QuoteCard extends ConsumerWidget {
               initialValue: quote.status,
               decoration: const InputDecoration(labelText: 'Estado comercial'),
               items: QuoteStatus.values
-                  .where((status) => status != QuoteStatus.converted)
                   .map(
                     (status) => DropdownMenuItem<QuoteStatus>(
                       value: status,
@@ -382,7 +381,7 @@ class _QuoteCard extends ConsumerWidget {
                     ),
                   )
                   .toList(growable: false),
-              onChanged: processing
+              onChanged: processing || quote.status == QuoteStatus.converted
                   ? null
                   : (selected) async {
                       if (selected == null || selected == quote.status) {

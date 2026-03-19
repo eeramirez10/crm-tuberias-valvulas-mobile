@@ -134,7 +134,6 @@ class QuoteDetailsPage extends ConsumerWidget {
                           labelText: 'Actualizar estado',
                         ),
                         items: QuoteStatus.values
-                            .where((status) => status != QuoteStatus.converted)
                             .map(
                               (status) => DropdownMenuItem<QuoteStatus>(
                                 value: status,
@@ -142,7 +141,8 @@ class QuoteDetailsPage extends ConsumerWidget {
                               ),
                             )
                             .toList(growable: false),
-                        onChanged: processing
+                        onChanged:
+                            processing || quote.status == QuoteStatus.converted
                             ? null
                             : (selected) async {
                                 if (selected == null ||
