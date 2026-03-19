@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/design_system/app_colors.dart';
+import '../../../../core/design_system/crm_page_shell.dart';
 import '../../../activities/presentation/providers/activities_providers.dart';
 import '../../../customers/presentation/providers/customers_providers.dart';
 import '../../../leads/presentation/providers/leads_providers.dart';
@@ -21,7 +23,30 @@ class DashboardPage extends ConsumerWidget {
     final tasksState = ref.watch(tasksControllerProvider);
     final activitiesState = ref.watch(activitiesProvider);
 
-    return SafeArea(
+    return CrmPageShell(
+      title: 'Dashboard',
+      subtitle: 'Bienvenido de vuelta',
+      actions: <Widget>[
+        ActionSquare(
+          icon: Icons.notifications_none_rounded,
+          onTap: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('No hay alertas nuevas.')),
+            );
+          },
+        ),
+        const SizedBox(width: 8),
+        ActionSquare(
+          icon: Icons.refresh_rounded,
+          onTap: () {
+            ref.invalidate(dashboardSummaryProvider);
+            ref.invalidate(customersProvider());
+            ref.invalidate(leadsProvider());
+            ref.invalidate(tasksControllerProvider);
+            ref.invalidate(activitiesProvider);
+          },
+        ),
+      ],
       child: RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(dashboardSummaryProvider);
@@ -33,68 +58,72 @@ class DashboardPage extends ConsumerWidget {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: <Widget>[
-            Text(
-              'CRM Distribuidora',
-              style: Theme.of(context).textTheme.headlineSmall,
+            const SizedBox(height: 8),
+            Center(
+              child: Container(
+                width: 90,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: Colors.black12,
+                  borderRadius: BorderRadius.circular(100),
+                ),
+              ),
             ),
-            const SizedBox(height: 4),
-            Text(
-              'Resumen comercial en tiempo real (mock)',
-              style: Theme.of(context).textTheme.bodyMedium,
+            const SizedBox(height: 10),
+            Center(
+              child: Text(
+                'Actualizado hace 1h',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: Colors.black54),
+              ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
             summaryState.when(
               data: (summary) => _SummaryGrid(summary: summary),
-              loading: () => const _LoadingCard(height: 160),
+              loading: () => const _LoadingCard(height: 220),
               error: (_, _) =>
                   const _ErrorCard(message: 'No se pudo cargar resumen.'),
             ),
-            const SizedBox(height: 16),
-            _SectionCard(
-              title: 'Clientes recientes',
-              child: customersState.when(
-                data: (items) => Column(
-                  children: items
-                      .take(3)
-                      .map(
-                        (customer) => ListTile(
-                          dense: true,
-                          contentPadding: EdgeInsets.zero,
-                          title: Text(customer.name),
-                          subtitle: Text(
-                            '${customer.city} • ${customer.contactName}',
-                          ),
-                          trailing: Text(customer.creditStatus),
-                        ),
-                      )
-                      .toList(growable: false),
-                ),
-                loading: () => const _LoadingCard(height: 120),
-                error: (_, _) => const Text('No se pudo cargar clientes.'),
-              ),
-            ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
             _SectionCard(
               title: 'Leads activos',
               child: leadsState.when(
                 data: (items) => Column(
                   children: items
-                      .take(3)
+                      .take(2)
                       .map(
-                        (lead) => ListTile(
-                          dense: true,
-                          contentPadding: EdgeInsets.zero,
-                          title: Text(lead.companyName),
-                          subtitle: Text(
-                            '${lead.status} • ${lead.nextActionDate}',
-                          ),
-                          trailing: Text(_currency(lead.estimatedAmount)),
+                        (lead) => _DataLine(
+                          title: lead.companyName,
+                          subtitle: '${lead.status} • ${lead.nextActionDate}',
+                          trailing: _currency(lead.estimatedAmount),
                         ),
                       )
                       .toList(growable: false),
                 ),
-                loading: () => const _LoadingCard(height: 120),
+                loading: () => const _LoadingCard(height: 112),
                 error: (_, _) => const Text('No se pudo cargar leads.'),
+              ),
+            ),
+            const SizedBox(height: 12),
+            _SectionCard(
+              title: 'Clientes recientes',
+              child: customersState.when(
+                data: (items) => Column(
+                  children: items
+                      .take(2)
+                      .map(
+                        (customer) => _DataLine(
+                          title: customer.name,
+                          subtitle:
+                              '${customer.city} • ${customer.contactName}',
+                          trailing: customer.creditStatus,
+                        ),
+                      )
+                      .toList(growable: false),
+                ),
+                loading: () => const _LoadingCard(height: 112),
+                error: (_, _) => const Text('No se pudo cargar clientes.'),
               ),
             ),
             const SizedBox(height: 12),
@@ -112,23 +141,21 @@ class DashboardPage extends ConsumerWidget {
               child: activitiesState.when(
                 data: (items) => Column(
                   children: items
-                      .take(3)
+                      .take(2)
                       .map(
-                        (activity) => ListTile(
-                          dense: true,
-                          contentPadding: EdgeInsets.zero,
-                          title: Text(activity.summary),
-                          subtitle: Text(
-                            '${activity.type} • ${activity.owner}',
-                          ),
+                        (activity) => _DataLine(
+                          title: activity.summary,
+                          subtitle: '${activity.type} • ${activity.owner}',
+                          trailing: DateFormat.Hm().format(activity.createdAt),
                         ),
                       )
                       .toList(growable: false),
                 ),
-                loading: () => const _LoadingCard(height: 120),
+                loading: () => const _LoadingCard(height: 112),
                 error: (_, _) => const Text('No se pudo cargar actividades.'),
               ),
             ),
+            const SizedBox(height: 20),
           ],
         ),
       ),
@@ -143,57 +170,76 @@ class _SummaryGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GridView.count(
-      crossAxisCount: 2,
-      childAspectRatio: 1.6,
-      shrinkWrap: true,
-      mainAxisSpacing: 10,
-      crossAxisSpacing: 10,
-      physics: const NeverScrollableScrollPhysics(),
-      children: <Widget>[
-        _MetricCard(label: 'Clientes', value: '${summary.totalCustomers}'),
-        _MetricCard(label: 'Leads activos', value: '${summary.activeLeads}'),
-        _MetricCard(label: 'Pipeline', value: _currency(summary.pipelineValue)),
-        _MetricCard(label: 'Tareas abiertas', value: '${summary.openTasks}'),
-        _MetricCard(
-          label: 'Ganado mes',
-          value: _currency(summary.wonThisMonth),
-        ),
-        _MetricCard(
-          label: 'Conversion',
-          value: '${(summary.conversionRate * 100).toStringAsFixed(0)}%',
-        ),
-      ],
-    );
-  }
-}
-
-class _MetricCard extends StatelessWidget {
-  const _MetricCard({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(label, style: Theme.of(context).textTheme.bodySmall),
-            const SizedBox(height: 6),
-            Text(
-              value,
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
+    final metrics = <({String title, String value, IconData icon})>[
+      (
+        title: 'Solicitudes',
+        value: '${summary.activeLeads}',
+        icon: Icons.request_page,
       ),
+      (
+        title: 'Tickets',
+        value: '${summary.openTasks}',
+        icon: Icons.support_agent,
+      ),
+      (
+        title: 'Pipeline',
+        value: _currency(summary.pipelineValue),
+        icon: Icons.account_tree_rounded,
+      ),
+      (
+        title: 'Conversion',
+        value: '${(summary.conversionRate * 100).toStringAsFixed(0)}%',
+        icon: Icons.trending_up,
+      ),
+    ];
+
+    return GridView.builder(
+      itemCount: metrics.length,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        mainAxisSpacing: 12,
+        crossAxisSpacing: 12,
+        childAspectRatio: 1.04,
+      ),
+      itemBuilder: (context, index) {
+        final item = metrics[index];
+        return Card(
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: AppColors.yellow,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(item.icon, color: AppColors.black),
+                ),
+                const Spacer(),
+                Text(
+                  item.value,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color: AppColors.black,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  item.title,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleMedium?.copyWith(color: Colors.black87),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -211,24 +257,52 @@ class _TasksList extends ConsumerWidget {
 
     return Column(
       children: items
-          .take(4)
+          .take(3)
           .map(
             (task) => ListTile(
-              dense: true,
               contentPadding: EdgeInsets.zero,
               title: Text(task.title),
               subtitle: Text('${task.type} • ${task.dueDate}'),
-              trailing: IconButton(
-                icon: const Icon(Icons.check_circle_outline),
+              trailing: FilledButton.tonalIcon(
                 onPressed: () async {
                   await ref
                       .read(tasksControllerProvider.notifier)
                       .complete(task.id);
                 },
+                icon: const Icon(Icons.check),
+                label: const Text('Hecha'),
               ),
             ),
           )
           .toList(growable: false),
+    );
+  }
+}
+
+class _DataLine extends StatelessWidget {
+  const _DataLine({
+    required this.title,
+    required this.subtitle,
+    required this.trailing,
+  });
+
+  final String title;
+  final String subtitle;
+  final String trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      dense: true,
+      contentPadding: EdgeInsets.zero,
+      title: Text(title),
+      subtitle: Text(subtitle),
+      trailing: Text(
+        trailing,
+        style: Theme.of(
+          context,
+        ).textTheme.titleSmall?.copyWith(color: AppColors.black),
+      ),
     );
   }
 }
@@ -243,11 +317,11 @@ class _SectionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Text(title, style: Theme.of(context).textTheme.titleMedium),
+            Text(title, style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 8),
             child,
           ],

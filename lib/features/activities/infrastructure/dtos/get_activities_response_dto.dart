@@ -37,9 +37,9 @@ class ActivityItemDto {
 }
 
 class GetActivitiesResponseDto {
-  const GetActivitiesResponseDto({required this.items});
-
   final List<ActivityItemDto> items;
+
+  const GetActivitiesResponseDto({required this.items});
 
   factory GetActivitiesResponseDto.fromJson(Map<String, dynamic> json) {
     final rawItems = (json['items'] as List<dynamic>? ?? <dynamic>[])

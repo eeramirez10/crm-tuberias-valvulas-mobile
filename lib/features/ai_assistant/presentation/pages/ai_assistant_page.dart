@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/design_system/app_colors.dart';
+import '../../../../core/design_system/crm_page_shell.dart';
 import '../providers/ai_assistant_providers.dart';
 
 class AiAssistantPage extends ConsumerStatefulWidget {
@@ -30,40 +32,62 @@ class _AiAssistantPageState extends ConsumerState<AiAssistantPage> {
   Widget build(BuildContext context) {
     final state = ref.watch(aiAssistantControllerProvider);
 
-    return SafeArea(
+    return CrmPageShell(
+      title: 'Asistente IA',
+      subtitle: 'Copiloto comercial simulado',
+      actions: <Widget>[
+        ActionSquare(icon: Icons.auto_graph_rounded, onTap: () {}),
+        const SizedBox(width: 8),
+        ActionSquare(icon: Icons.tune_rounded, onTap: () {}),
+      ],
       child: state.when(
         data: (viewModel) {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: <Widget>[
-              Text(
-                'Asistente IA (simulado)',
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Los endpoints y contratos ya estan listos para backend real.',
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 8),
               Card(
                 child: Padding(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(14),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       Text(
                         'Insights de hoy',
-                        style: Theme.of(context).textTheme.titleMedium,
+                        style: Theme.of(context).textTheme.titleLarge,
                       ),
                       const SizedBox(height: 8),
                       ...viewModel.insights.map(
                         (item) => ListTile(
                           contentPadding: EdgeInsets.zero,
                           dense: true,
+                          leading: const CircleAvatar(
+                            backgroundColor: AppColors.yellow,
+                            child: Icon(
+                              Icons.flash_on,
+                              color: AppColors.black,
+                              size: 18,
+                            ),
+                          ),
                           title: Text(item.title),
                           subtitle: Text(item.detail),
-                          trailing: Chip(label: Text(item.priority)),
+                          trailing: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.yellow,
+                              borderRadius: BorderRadius.circular(100),
+                            ),
+                            child: Text(
+                              item.priority,
+                              style: const TextStyle(
+                                color: AppColors.black,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     ],
@@ -73,15 +97,12 @@ class _AiAssistantPageState extends ConsumerState<AiAssistantPage> {
               const SizedBox(height: 12),
               Card(
                 child: Padding(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(14),
                   child: Column(
                     children: <Widget>[
                       TextField(
                         controller: _customerController,
-                        decoration: const InputDecoration(
-                          labelText: 'Cliente',
-                          border: OutlineInputBorder(),
-                        ),
+                        decoration: const InputDecoration(labelText: 'Cliente'),
                       ),
                       const SizedBox(height: 10),
                       TextField(
@@ -89,16 +110,12 @@ class _AiAssistantPageState extends ConsumerState<AiAssistantPage> {
                         maxLines: 3,
                         decoration: const InputDecoration(
                           labelText: 'Contexto de seguimiento',
-                          border: OutlineInputBorder(),
                         ),
                       ),
                       const SizedBox(height: 10),
                       DropdownButtonFormField<String>(
                         initialValue: _channel,
-                        decoration: const InputDecoration(
-                          labelText: 'Canal',
-                          border: OutlineInputBorder(),
-                        ),
+                        decoration: const InputDecoration(labelText: 'Canal'),
                         items: const <DropdownMenuItem<String>>[
                           DropdownMenuItem(
                             value: 'whatsapp',
@@ -121,6 +138,10 @@ class _AiAssistantPageState extends ConsumerState<AiAssistantPage> {
                       SizedBox(
                         width: double.infinity,
                         child: FilledButton.icon(
+                          style: FilledButton.styleFrom(
+                            backgroundColor: AppColors.black,
+                            foregroundColor: AppColors.yellow,
+                          ),
                           onPressed: viewModel.isGeneratingDraft
                               ? null
                               : () async {
@@ -158,7 +179,7 @@ class _AiAssistantPageState extends ConsumerState<AiAssistantPage> {
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.black12),
+                            border: Border.all(color: AppColors.panelBorder),
                           ),
                           child: Text(viewModel.lastDraft!.draft),
                         ),
@@ -167,6 +188,7 @@ class _AiAssistantPageState extends ConsumerState<AiAssistantPage> {
                   ),
                 ),
               ),
+              const SizedBox(height: 20),
             ],
           );
         },
