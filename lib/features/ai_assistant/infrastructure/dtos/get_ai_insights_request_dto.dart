@@ -1,0 +1,3 @@
+class GetAiInsightsRequestDto {
+  const GetAiInsightsRequestDto();
+}
