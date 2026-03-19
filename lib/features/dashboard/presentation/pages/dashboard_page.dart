@@ -64,7 +64,7 @@ class DashboardPage extends ConsumerWidget {
                 width: 90,
                 height: 8,
                 decoration: BoxDecoration(
-                  color: Colors.black12,
+                  color: AppColors.blackSoft,
                   borderRadius: BorderRadius.circular(100),
                 ),
               ),

@@ -23,23 +23,15 @@ class CrmPageShell extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: <Color>[AppColors.blackSoft, AppColors.black],
+          colors: <Color>[AppColors.yellow, AppColors.yellow],
         ),
       ),
       child: SafeArea(
         child: Column(
           children: <Widget>[
-            const SizedBox(height: 6),
-            Container(
-              width: 120,
-              height: 8,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(100),
-              ),
-            ),
+         
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
               child: Row(
                 children: <Widget>[
                   _ActionSquare(
