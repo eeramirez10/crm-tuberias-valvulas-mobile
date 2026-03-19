@@ -203,81 +203,78 @@ class _ShellScaffold extends StatelessWidget {
               ),
             ),
             Expanded(
-              child: Padding(
+              child: ListView(
                 padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      'Navegacion',
-                      style: Theme.of(context).textTheme.titleMedium,
+                children: <Widget>[
+                  Text(
+                    'Navegacion',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 10),
+                  _MenuTile(
+                    selected: navigationShell.currentIndex == 0,
+                    icon: Icons.dashboard_rounded,
+                    label: 'Dashboard',
+                    onTap: () => _goTo(0, context),
+                  ),
+                  const SizedBox(height: 8),
+                  _MenuTile(
+                    selected: navigationShell.currentIndex == 1,
+                    icon: Icons.trending_up_rounded,
+                    label: 'Leads',
+                    onTap: () => _goTo(1, context),
+                  ),
+                  const SizedBox(height: 8),
+                  _MenuTile(
+                    selected: navigationShell.currentIndex == 2,
+                    icon: Icons.handshake_rounded,
+                    label: 'Deals',
+                    onTap: () => _goTo(2, context),
+                  ),
+                  const SizedBox(height: 8),
+                  _MenuTile(
+                    selected: navigationShell.currentIndex == 3,
+                    icon: Icons.receipt_long_rounded,
+                    label: 'Cotizaciones',
+                    onTap: () => _goTo(3, context),
+                  ),
+                  const SizedBox(height: 8),
+                  _MenuTile(
+                    selected: navigationShell.currentIndex == 4,
+                    icon: Icons.business_rounded,
+                    label: 'Clients',
+                    onTap: () => _goTo(4, context),
+                  ),
+                  const SizedBox(height: 8),
+                  _MenuTile(
+                    selected: navigationShell.currentIndex == 5,
+                    icon: Icons.auto_awesome_rounded,
+                    label: 'Asistente IA',
+                    onTap: () => _goTo(5, context),
+                  ),
+                  const SizedBox(height: 12),
+                  const Divider(height: 1),
+                  const SizedBox(height: 10),
+                  const ListTile(
+                    dense: true,
+                    leading: Icon(Icons.info_outline),
+                    title: Text('CRM v1.0.0'),
+                    subtitle: Text('Demo amarillo/negro'),
+                  ),
+                  const SizedBox(height: 8),
+                  OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 48),
+                      foregroundColor: AppColors.black,
+                      side: const BorderSide(color: AppColors.black),
                     ),
-                    const SizedBox(height: 10),
-                    _MenuTile(
-                      selected: navigationShell.currentIndex == 0,
-                      icon: Icons.dashboard_rounded,
-                      label: 'Dashboard',
-                      onTap: () => _goTo(0, context),
-                    ),
-                    const SizedBox(height: 8),
-                    _MenuTile(
-                      selected: navigationShell.currentIndex == 1,
-                      icon: Icons.trending_up_rounded,
-                      label: 'Leads',
-                      onTap: () => _goTo(1, context),
-                    ),
-                    const SizedBox(height: 8),
-                    _MenuTile(
-                      selected: navigationShell.currentIndex == 2,
-                      icon: Icons.handshake_rounded,
-                      label: 'Deals',
-                      onTap: () => _goTo(2, context),
-                    ),
-                    const SizedBox(height: 8),
-                    _MenuTile(
-                      selected: navigationShell.currentIndex == 3,
-                      icon: Icons.receipt_long_rounded,
-                      label: 'Cotizaciones',
-                      onTap: () => _goTo(3, context),
-                    ),
-                    const SizedBox(height: 8),
-                    _MenuTile(
-                      selected: navigationShell.currentIndex == 4,
-                      icon: Icons.business_rounded,
-                      label: 'Clients',
-                      onTap: () => _goTo(4, context),
-                    ),
-                    const SizedBox(height: 8),
-                    _MenuTile(
-                      selected: navigationShell.currentIndex == 5,
-                      icon: Icons.auto_awesome_rounded,
-                      label: 'Asistente IA',
-                      onTap: () => _goTo(5, context),
-                    ),
-                    const Spacer(),
-                    const Divider(height: 1),
-                    const SizedBox(height: 10),
-                    const ListTile(
-                      dense: true,
-                      leading: Icon(Icons.info_outline),
-                      title: Text('CRM v1.0.0'),
-                      subtitle: Text('Demo amarillo/negro'),
-                    ),
-                    const SizedBox(height: 8),
-                    OutlinedButton.icon(
-                      style: OutlinedButton.styleFrom(
-                        minimumSize: const Size(double.infinity, 48),
-                        foregroundColor: AppColors.black,
-                        side: const BorderSide(color: AppColors.black),
-                      ),
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                      icon: const Icon(Icons.logout),
-                      label: const Text('Cerrar menu'),
-                    ),
-                  ],
-                ),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    icon: const Icon(Icons.logout),
+                    label: const Text('Cerrar menu'),
+                  ),
+                ],
               ),
             ),
           ],
