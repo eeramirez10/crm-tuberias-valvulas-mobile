@@ -8,6 +8,8 @@ class ApiEndpoints {
   static const tasks = '/tasks';
   static const activities = '/activities';
   static const aiInsights = '/ai/insights';
+  static const aiNextActions = '/ai/next-actions';
+  static const aiRiskSummary = '/ai/risk-summary';
   static const aiFollowUpDraft = '/ai/follow-up-draft';
 
   static String updateOpportunityStage(String id) => '$opportunities/$id/stage';

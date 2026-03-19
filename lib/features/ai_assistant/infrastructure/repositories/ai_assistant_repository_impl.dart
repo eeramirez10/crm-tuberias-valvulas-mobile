@@ -1,4 +1,6 @@
 import '../../domain/entities/ai_insight.dart';
+import '../../domain/entities/ai_next_action.dart';
+import '../../domain/entities/ai_risk_summary.dart';
 import '../../domain/entities/follow_up_draft.dart';
 import '../../domain/repositories/ai_assistant_repository.dart';
 import '../datasources/ai_assistant_datasource.dart';
@@ -15,6 +17,20 @@ class AiAssistantRepositoryImpl implements AiAssistantRepository {
     return response.items
         .map((item) => item.toEntity())
         .toList(growable: false);
+  }
+
+  @override
+  Future<List<AiNextAction>> getNextActions() async {
+    final response = await _datasource.getNextActions();
+    return response.items
+        .map((item) => item.toEntity())
+        .toList(growable: false);
+  }
+
+  @override
+  Future<AiRiskSummary> getRiskSummary() async {
+    final response = await _datasource.getRiskSummary();
+    return response.toEntity();
   }
 
   @override

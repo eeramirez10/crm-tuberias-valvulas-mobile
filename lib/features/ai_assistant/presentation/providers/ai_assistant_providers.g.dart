@@ -65,6 +65,46 @@ final getAiInsightsUseCaseProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef GetAiInsightsUseCaseRef = AutoDisposeProviderRef<GetAiInsightsUseCase>;
+String _$getAiNextActionsUseCaseHash() =>
+    r'db27a107aa0c9dc26595d9ef2a65dc1172e980bd';
+
+/// See also [getAiNextActionsUseCase].
+@ProviderFor(getAiNextActionsUseCase)
+final getAiNextActionsUseCaseProvider =
+    AutoDisposeProvider<GetAiNextActionsUseCase>.internal(
+      getAiNextActionsUseCase,
+      name: r'getAiNextActionsUseCaseProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$getAiNextActionsUseCaseHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef GetAiNextActionsUseCaseRef =
+    AutoDisposeProviderRef<GetAiNextActionsUseCase>;
+String _$getAiRiskSummaryUseCaseHash() =>
+    r'e6782f82ade34f0438c432e468a14656899f8c91';
+
+/// See also [getAiRiskSummaryUseCase].
+@ProviderFor(getAiRiskSummaryUseCase)
+final getAiRiskSummaryUseCaseProvider =
+    AutoDisposeProvider<GetAiRiskSummaryUseCase>.internal(
+      getAiRiskSummaryUseCase,
+      name: r'getAiRiskSummaryUseCaseProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$getAiRiskSummaryUseCaseHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef GetAiRiskSummaryUseCaseRef =
+    AutoDisposeProviderRef<GetAiRiskSummaryUseCase>;
 String _$generateFollowUpDraftUseCaseHash() =>
     r'4b4777fe118e211b1387148e6cde0edb8686848a';
 
@@ -85,8 +125,25 @@ final generateFollowUpDraftUseCaseProvider =
 // ignore: unused_element
 typedef GenerateFollowUpDraftUseCaseRef =
     AutoDisposeProviderRef<GenerateFollowUpDraftUseCase>;
+String _$aiRiskSummaryHash() => r'1a8cedafbaeb09c2e483c768cd20ed49441ea034';
+
+/// See also [aiRiskSummary].
+@ProviderFor(aiRiskSummary)
+final aiRiskSummaryProvider = AutoDisposeFutureProvider<AiRiskSummary>.internal(
+  aiRiskSummary,
+  name: r'aiRiskSummaryProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$aiRiskSummaryHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef AiRiskSummaryRef = AutoDisposeFutureProviderRef<AiRiskSummary>;
 String _$aiAssistantControllerHash() =>
-    r'2a5ce6dfebcc5ffd046572a769c826b241481392';
+    r'613f89ed58d8b4ee9a80291a02b28308d18aac0e';
 
 /// See also [AiAssistantController].
 @ProviderFor(AiAssistantController)

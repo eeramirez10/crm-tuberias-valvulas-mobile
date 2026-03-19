@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/design_system/app_colors.dart';
 import '../../../../core/design_system/crm_page_shell.dart';
 import '../../../activities/presentation/providers/activities_providers.dart';
+import '../../../ai_assistant/presentation/providers/ai_assistant_providers.dart';
 import '../../../customers/presentation/providers/customers_providers.dart';
 import '../../../leads/presentation/providers/leads_providers.dart';
 import '../../../tasks/domain/entities/task_item.dart';
@@ -22,6 +23,7 @@ class DashboardPage extends ConsumerWidget {
     final leadsState = ref.watch(leadsProvider());
     final tasksState = ref.watch(tasksControllerProvider);
     final activitiesState = ref.watch(activitiesTimelineControllerProvider);
+    final riskSummaryState = ref.watch(aiRiskSummaryProvider);
 
     return CrmPageShell(
       title: 'Dashboard',
@@ -44,6 +46,7 @@ class DashboardPage extends ConsumerWidget {
             ref.invalidate(leadsProvider());
             ref.invalidate(tasksControllerProvider);
             ref.invalidate(activitiesTimelineControllerProvider);
+            ref.invalidate(aiRiskSummaryProvider);
           },
         ),
       ],
@@ -54,6 +57,7 @@ class DashboardPage extends ConsumerWidget {
           ref.invalidate(leadsProvider());
           ref.invalidate(tasksControllerProvider);
           ref.invalidate(activitiesTimelineControllerProvider);
+          ref.invalidate(aiRiskSummaryProvider);
         },
         child: ListView(
           padding: const EdgeInsets.all(16),
@@ -84,6 +88,20 @@ class DashboardPage extends ConsumerWidget {
               loading: () => const _LoadingCard(height: 220),
               error: (_, _) =>
                   const _ErrorCard(message: 'No se pudo cargar resumen.'),
+            ),
+            const SizedBox(height: 12),
+            _SectionCard(
+              title: 'Panel de riesgo IA',
+              child: riskSummaryState.when(
+                data: (risk) => _RiskSummaryRow(
+                  high: risk.high,
+                  medium: risk.medium,
+                  low: risk.low,
+                ),
+                loading: () => const _LoadingCard(height: 108),
+                error: (_, _) =>
+                    const Text('No se pudo cargar panel de riesgo.'),
+              ),
             ),
             const SizedBox(height: 14),
             _SectionCard(
@@ -158,6 +176,95 @@ class DashboardPage extends ConsumerWidget {
             const SizedBox(height: 20),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _RiskSummaryRow extends StatelessWidget {
+  const _RiskSummaryRow({
+    required this.high,
+    required this.medium,
+    required this.low,
+  });
+
+  final int high;
+  final int medium;
+  final int low;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: <Widget>[
+        Expanded(
+          child: _RiskPill(
+            label: 'Alto',
+            value: high,
+            background: Colors.red.shade100,
+            foreground: Colors.red.shade900,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _RiskPill(
+            label: 'Medio',
+            value: medium,
+            background: AppColors.yellowSoft,
+            foreground: AppColors.black,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _RiskPill(
+            label: 'Bajo',
+            value: low,
+            background: Colors.green.shade100,
+            foreground: Colors.green.shade900,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _RiskPill extends StatelessWidget {
+  const _RiskPill({
+    required this.label,
+    required this.value,
+    required this.background,
+    required this.foreground,
+  });
+
+  final String label;
+  final int value;
+  final Color background;
+  final Color foreground;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            '$value',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              color: foreground,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          Text(
+            label,
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(color: foreground),
+          ),
+        ],
       ),
     );
   }

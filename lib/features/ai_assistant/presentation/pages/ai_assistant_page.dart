@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/design_system/app_colors.dart';
+import '../../../../core/design_system/app_toast.dart';
 import '../../../../core/design_system/crm_page_shell.dart';
+import '../../domain/entities/ai_next_action.dart';
 import '../providers/ai_assistant_providers.dart';
 
 class AiAssistantPage extends ConsumerStatefulWidget {
@@ -36,7 +38,26 @@ class _AiAssistantPageState extends ConsumerState<AiAssistantPage> {
       title: 'Asistente IA',
       subtitle: 'Copiloto comercial simulado',
       actions: <Widget>[
-        ActionSquare(icon: Icons.auto_graph_rounded, onTap: () {}),
+        ActionSquare(
+          icon: Icons.auto_graph_rounded,
+          onTap: () async {
+            try {
+              await ref
+                  .read(aiAssistantControllerProvider.notifier)
+                  .refreshSmartActions();
+              if (context.mounted) {
+                AppToast.info(context, 'Recomendaciones actualizadas.');
+              }
+            } catch (_) {
+              if (context.mounted) {
+                AppToast.info(
+                  context,
+                  'No se pudieron actualizar recomendaciones.',
+                );
+              }
+            }
+          },
+        ),
         const SizedBox(width: 8),
         ActionSquare(icon: Icons.tune_rounded, onTap: () {}),
       ],
@@ -95,6 +116,31 @@ class _AiAssistantPageState extends ConsumerState<AiAssistantPage> {
                 ),
               ),
               const SizedBox(height: 12),
+              _NextActionsCard(
+                actions: viewModel.nextActions,
+                isApplying: viewModel.isApplying,
+                onApply: (action) async {
+                  try {
+                    await ref
+                        .read(aiAssistantControllerProvider.notifier)
+                        .applyRecommendation(action);
+                    if (context.mounted) {
+                      AppToast.success(
+                        context,
+                        'Recomendacion aplicada. Tarea y actividad registradas.',
+                      );
+                    }
+                  } catch (_) {
+                    if (context.mounted) {
+                      AppToast.info(
+                        context,
+                        'No se pudo aplicar la recomendacion IA.',
+                      );
+                    }
+                  }
+                },
+              ),
+              const SizedBox(height: 12),
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(14),
@@ -145,15 +191,32 @@ class _AiAssistantPageState extends ConsumerState<AiAssistantPage> {
                           onPressed: viewModel.isGeneratingDraft
                               ? null
                               : () async {
-                                  await ref
-                                      .read(
-                                        aiAssistantControllerProvider.notifier,
-                                      )
-                                      .generateDraft(
-                                        customerName: _customerController.text,
-                                        context: _contextController.text,
-                                        channel: _channel,
+                                  try {
+                                    await ref
+                                        .read(
+                                          aiAssistantControllerProvider
+                                              .notifier,
+                                        )
+                                        .generateDraft(
+                                          customerName:
+                                              _customerController.text,
+                                          context: _contextController.text,
+                                          channel: _channel,
+                                        );
+                                    if (context.mounted) {
+                                      AppToast.success(
+                                        context,
+                                        'Borrador generado con exito.',
                                       );
+                                    }
+                                  } catch (_) {
+                                    if (context.mounted) {
+                                      AppToast.info(
+                                        context,
+                                        'No se pudo generar el borrador.',
+                                      );
+                                    }
+                                  }
                                 },
                           icon: const Icon(Icons.auto_fix_high),
                           label: Text(
@@ -194,6 +257,150 @@ class _AiAssistantPageState extends ConsumerState<AiAssistantPage> {
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(child: Text('Error en IA: $error')),
+      ),
+    );
+  }
+}
+
+class _NextActionsCard extends StatelessWidget {
+  const _NextActionsCard({
+    required this.actions,
+    required this.isApplying,
+    required this.onApply,
+  });
+
+  final List<AiNextAction> actions;
+  final bool Function(String actionId) isApplying;
+  final Future<void> Function(AiNextAction action) onApply;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(
+              'Top 5 siguientes acciones',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 8),
+            if (actions.isEmpty)
+              const Text('No hay recomendaciones pendientes.')
+            else
+              ...actions.map(
+                (action) => Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: _ActionTile(
+                    action: action,
+                    applying: isApplying(action.id),
+                    onApply: () => onApply(action),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ActionTile extends StatelessWidget {
+  const _ActionTile({
+    required this.action,
+    required this.applying,
+    required this.onApply,
+  });
+
+  final AiNextAction action;
+  final bool applying;
+  final Future<void> Function() onApply;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.panelBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: Text(
+                  action.title,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: AppColors.black,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              _PriorityChip(priority: action.priority),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(action.reason, style: Theme.of(context).textTheme.bodyMedium),
+          const SizedBox(height: 4),
+          Text(
+            'Tarea sugerida: ${action.suggestedTaskTitle} (${action.suggestedDueDate})',
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: Colors.black54),
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: applying ? null : onApply,
+              icon: applying
+                  ? const SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.auto_fix_high),
+              label: Text(applying ? 'Aplicando...' : 'Aplicar recomendacion'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PriorityChip extends StatelessWidget {
+  const _PriorityChip({required this.priority});
+
+  final String priority;
+
+  @override
+  Widget build(BuildContext context) {
+    final normalized = priority.toLowerCase();
+    final background = switch (normalized) {
+      'alta' => Colors.red.shade100,
+      'media' => AppColors.yellowSoft,
+      _ => Colors.green.shade100,
+    };
+    final foreground = switch (normalized) {
+      'alta' => Colors.red.shade900,
+      'media' => AppColors.black,
+      _ => Colors.green.shade900,
+    };
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        priority,
+        style: TextStyle(color: foreground, fontWeight: FontWeight.w700),
       ),
     );
   }

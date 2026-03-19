@@ -88,6 +88,14 @@ class MockHttpAdapter implements HttpAdapter {
       return _dataStore.getAiInsights();
     }
 
+    if (path == ApiEndpoints.aiNextActions && method == HttpMethod.get) {
+      return _dataStore.getAiNextActions();
+    }
+
+    if (path == ApiEndpoints.aiRiskSummary && method == HttpMethod.get) {
+      return _dataStore.getAiRiskSummary();
+    }
+
     if (path == ApiEndpoints.aiFollowUpDraft && method == HttpMethod.post) {
       return _dataStore.generateFollowUpDraft(
         customerName: (data?['customer_name'] as String?) ?? 'Cliente',

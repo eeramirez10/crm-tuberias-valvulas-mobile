@@ -352,6 +352,82 @@ class MockApiDataStore {
     };
   }
 
+  Map<String, dynamic> getAiRiskSummary() {
+    var high = 0;
+    var medium = 0;
+    var low = 0;
+
+    for (final item in _opportunities) {
+      final probability = (item['probability'] as num?)?.toDouble() ?? 0;
+      if (probability < 0.5) {
+        high += 1;
+      } else if (probability < 0.75) {
+        medium += 1;
+      } else {
+        low += 1;
+      }
+    }
+
+    return <String, dynamic>{'high': high, 'medium': medium, 'low': low};
+  }
+
+  Map<String, dynamic> getAiNextActions() {
+    final items = <Map<String, dynamic>>[];
+
+    for (final lead in _leads) {
+      final amount = (lead['estimated_amount'] as num?)?.toDouble() ?? 0;
+      final status = (lead['status'] as String?) ?? 'Nuevo';
+      items.add(<String, dynamic>{
+        'id': 'nba-${lead['id']}',
+        'title': 'Atender lead ${lead['company_name']}',
+        'reason':
+            'Lead en estado $status con valor potencial ${_moneyCompact(amount)}.',
+        'priority': _leadPriority(status, amount),
+        'target_type': 'lead',
+        'target_id': lead['id'] as String? ?? '',
+        'suggested_task_title': 'Follow up lead ${lead['company_name']}',
+        'suggested_task_type': 'Seguimiento',
+        'suggested_due_date': lead['next_action_date'] as String? ?? '',
+        '_score': _leadScore(status, amount),
+      });
+    }
+
+    for (final opportunity in _opportunities) {
+      final amount = (opportunity['amount'] as num?)?.toDouble() ?? 0;
+      final probability = (opportunity['probability'] as num?)?.toDouble() ?? 0;
+      items.add(<String, dynamic>{
+        'id': 'nba-${opportunity['id']}',
+        'title': 'Impulsar oportunidad ${opportunity['title']}',
+        'reason':
+            'Etapa ${(opportunity['stage'] as String?) ?? ''} con probabilidad ${(probability * 100).toStringAsFixed(0)}%.',
+        'priority': _opportunityPriority(probability, amount),
+        'target_type': 'opportunity',
+        'target_id': opportunity['id'] as String? ?? '',
+        'suggested_task_title': 'Empuje comercial ${opportunity['title']}',
+        'suggested_task_type': 'Oportunidad',
+        'suggested_due_date':
+            opportunity['expected_close_date'] as String? ?? '',
+        '_score': _opportunityScore(probability, amount),
+      });
+    }
+
+    items.sort(
+      (a, b) =>
+          ((b['_score'] as num?) ?? 0).compareTo((a['_score'] as num?) ?? 0),
+    );
+
+    return <String, dynamic>{
+      'items': items
+          .take(5)
+          .map((item) {
+            final sanitized = Map<String, dynamic>.from(item);
+            sanitized.remove('_score');
+            return sanitized;
+          })
+          .toList(growable: false),
+    };
+  }
+
   Map<String, dynamic> generateFollowUpDraft({
     required String customerName,
     required String context,
@@ -366,5 +442,46 @@ class MockApiDataStore {
           'Si te parece, cierro la version final de cotizacion en cuanto me confirmes medidas.',
       'suggested_subject': 'Seguimiento cotizacion de tuberias y valvulas',
     };
+  }
+
+  double _leadScore(String status, double amount) {
+    final base = switch (status.toLowerCase()) {
+      'nuevo' => 82.0,
+      'contactado' => 76.0,
+      'calificado' => 88.0,
+      _ => 70.0,
+    };
+    return base + (amount / 10000);
+  }
+
+  double _opportunityScore(double probability, double amount) {
+    return (probability * 100) + (amount / 12000);
+  }
+
+  String _leadPriority(String status, double amount) {
+    if (status.toLowerCase() == 'calificado' || amount >= 200000) {
+      return 'Alta';
+    }
+    if (amount >= 80000) {
+      return 'Media';
+    }
+    return 'Baja';
+  }
+
+  String _opportunityPriority(double probability, double amount) {
+    if (probability >= 0.7 || amount >= 150000) {
+      return 'Alta';
+    }
+    if (probability >= 0.5 || amount >= 70000) {
+      return 'Media';
+    }
+    return 'Baja';
+  }
+
+  String _moneyCompact(double value) {
+    if (value >= 1000000) {
+      return '\$${(value / 1000000).toStringAsFixed(1)}M';
+    }
+    return '\$${(value / 1000).toStringAsFixed(0)}K';
   }
 }

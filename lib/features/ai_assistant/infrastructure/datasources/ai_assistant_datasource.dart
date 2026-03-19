@@ -4,6 +4,8 @@ import '../../../../core/network/http_method.dart';
 import '../dtos/generate_follow_up_draft_request_dto.dart';
 import '../dtos/generate_follow_up_draft_response_dto.dart';
 import '../dtos/get_ai_insights_response_dto.dart';
+import '../dtos/get_ai_next_actions_response_dto.dart';
+import '../dtos/get_ai_risk_summary_response_dto.dart';
 
 class AiAssistantDatasource {
   const AiAssistantDatasource(this._httpAdapter);
@@ -17,6 +19,24 @@ class AiAssistantDatasource {
     );
 
     return GetAiInsightsResponseDto.fromJson(response);
+  }
+
+  Future<GetAiNextActionsResponseDto> getNextActions() async {
+    final response = await _httpAdapter.request(
+      path: ApiEndpoints.aiNextActions,
+      method: HttpMethod.get,
+    );
+
+    return GetAiNextActionsResponseDto.fromJson(response);
+  }
+
+  Future<GetAiRiskSummaryResponseDto> getRiskSummary() async {
+    final response = await _httpAdapter.request(
+      path: ApiEndpoints.aiRiskSummary,
+      method: HttpMethod.get,
+    );
+
+    return GetAiRiskSummaryResponseDto.fromJson(response);
   }
 
   Future<GenerateFollowUpDraftResponseDto> generateFollowUpDraft(
