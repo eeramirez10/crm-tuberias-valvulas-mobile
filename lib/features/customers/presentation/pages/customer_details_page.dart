@@ -24,169 +24,168 @@ class _CustomerDetailsPageState extends ConsumerState<CustomerDetailsPage> {
 
     return Scaffold(
       backgroundColor: AppColors.black,
-      body: SafeArea(
-        child: customerState.when(
-          data: (customers) {
-            final customer = _findCustomer(customers, widget.customerId);
-            if (customer == null) {
-              return const Center(
-                child: Text(
-                  'Cliente no encontrado',
-                  style: TextStyle(color: Colors.white),
-                ),
-              );
-            }
+      body: customerState.when(
+        data: (customers) {
+          final customer = _findCustomer(customers, widget.customerId);
+          if (customer == null) {
+            return const Center(
+              child: Text(
+                'Cliente no encontrado',
+                style: TextStyle(color: Colors.white),
+              ),
+            );
+          }
 
-            return Column(
-              children: <Widget>[
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: <Color>[AppColors.yellow, AppColors.yellowSoft],
-                    ),
+          return Column(
+            children: <Widget>[
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  MediaQuery.of(context).padding.top + 5,
+                  16,
+                  20,
+                ),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: <Color>[AppColors.yellow, AppColors.yellowSoft],
                   ),
-                  child: Column(
-                    children: <Widget>[
-                      Row(
+                ),
+                child: Column(
+                  children: <Widget>[
+                    Row(
+                      children: <Widget>[
+                        IconButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          icon: const Icon(Icons.arrow_back_rounded),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Client Details',
+                          style: Theme.of(context).textTheme.headlineSmall
+                              ?.copyWith(color: AppColors.textOnDark),
+                        ),
+                        const Spacer(),
+                        const Icon(Icons.edit_rounded),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.34),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: Colors.white54),
+                      ),
+                      child: Row(
                         children: <Widget>[
-                          IconButton(
-                            onPressed: () => Navigator.of(context).pop(),
-                            icon: const Icon(Icons.arrow_back_rounded),
+                          CircleAvatar(
+                            radius: 36,
+                            backgroundColor: Colors.white,
+                            child: Text(
+                              customer.contactName.substring(0, 1),
+                              style: const TextStyle(
+                                color: AppColors.black,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 26,
+                              ),
+                            ),
                           ),
-                          const SizedBox(width: 6),
-                          Text(
-                            'Client Details',
-                            style: Theme.of(context).textTheme.headlineSmall
-                                ?.copyWith(color: AppColors.black),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                Text(
+                                  customer.contactName,
+                                  style: Theme.of(context).textTheme.titleLarge,
+                                ),
+                                Text(
+                                  '${customer.contactName.toLowerCase().replaceAll(' ', '.')}@${customer.name.toLowerCase().split(' ').first}.com',
+                                  style: const TextStyle(color: Colors.black87),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(customer.name),
+                              ],
+                            ),
                           ),
-                          const Spacer(),
-                          const Icon(Icons.edit_rounded),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.black,
+                              borderRadius: BorderRadius.circular(100),
+                            ),
+                            child: Text(
+                              customer.creditStatus.toUpperCase(),
+                              style: const TextStyle(
+                                color: AppColors.yellow,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
                         ],
                       ),
-                      const SizedBox(height: 12),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Container(
+                  width: double.infinity,
+                  decoration: const BoxDecoration(
+                    color: AppColors.panel,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(0),
+                      topRight: Radius.circular(0),
+                    ),
+                  ),
+                  child: ListView(
+                    padding: const EdgeInsets.all(16),
+                    children: <Widget>[
                       Container(
-                        padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.34),
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(color: Colors.white54),
+                          color: AppColors.panelCard,
+                          borderRadius: BorderRadius.circular(100),
+                          border: Border.all(color: AppColors.panelBorder),
                         ),
                         child: Row(
                           children: <Widget>[
-                            CircleAvatar(
-                              radius: 36,
-                              backgroundColor: Colors.white,
-                              child: Text(
-                                customer.contactName.substring(0, 1),
-                                style: const TextStyle(
-                                  color: AppColors.black,
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 26,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
                             Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: <Widget>[
-                                  Text(
-                                    customer.contactName,
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.titleLarge,
-                                  ),
-                                  Text(
-                                    '${customer.contactName.toLowerCase().replaceAll(' ', '.')}@${customer.name.toLowerCase().split(' ').first}.com',
-                                    style: const TextStyle(
-                                      color: Colors.black87,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(customer.name),
-                                ],
+                              child: _TabButton(
+                                active: tab == 0,
+                                label: 'Overview',
+                                onTap: () => setState(() => tab = 0),
                               ),
                             ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.black,
-                                borderRadius: BorderRadius.circular(100),
-                              ),
-                              child: Text(
-                                customer.creditStatus.toUpperCase(),
-                                style: const TextStyle(
-                                  color: AppColors.yellow,
-                                  fontWeight: FontWeight.w700,
-                                ),
+                            Expanded(
+                              child: _TabButton(
+                                active: tab == 1,
+                                label: 'Projects',
+                                onTap: () => setState(() => tab = 1),
                               ),
                             ),
                           ],
                         ),
                       ),
+                      const SizedBox(height: 12),
+                      if (tab == 0)
+                        _OverviewCard(customer: customer)
+                      else
+                        _ProjectsCard(customer: customer),
                     ],
                   ),
                 ),
-                Expanded(
-                  child: Container(
-                    width: double.infinity,
-                    decoration: const BoxDecoration(
-                      color: AppColors.panel,
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(30),
-                        topRight: Radius.circular(30),
-                      ),
-                    ),
-                    child: ListView(
-                      padding: const EdgeInsets.all(16),
-                      children: <Widget>[
-                        Container(
-                          decoration: BoxDecoration(
-                            color: AppColors.panelCard,
-                            borderRadius: BorderRadius.circular(100),
-                            border: Border.all(color: AppColors.panelBorder),
-                          ),
-                          child: Row(
-                            children: <Widget>[
-                              Expanded(
-                                child: _TabButton(
-                                  active: tab == 0,
-                                  label: 'Overview',
-                                  onTap: () => setState(() => tab = 0),
-                                ),
-                              ),
-                              Expanded(
-                                child: _TabButton(
-                                  active: tab == 1,
-                                  label: 'Projects',
-                                  onTap: () => setState(() => tab = 1),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        if (tab == 0)
-                          _OverviewCard(customer: customer)
-                        else
-                          _ProjectsCard(customer: customer),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            );
-          },
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, _) => Center(child: Text('Error: $error')),
-        ),
+              ),
+            ],
+          );
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, _) => Center(child: Text('Error: $error')),
       ),
     );
   }

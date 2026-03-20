@@ -125,14 +125,8 @@ class _ShellScaffold extends StatelessWidget {
                 18,
                 20,
               ),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: <Color>[AppColors.blackSoft, AppColors.black],
-                ),
-                borderRadius: BorderRadius.only(topRight: Radius.circular(5)),
-              ),
+              color: AppColors.black,
+
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[

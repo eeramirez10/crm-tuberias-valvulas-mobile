@@ -1,3 +1,4 @@
+import 'package:crm_tuberias_valvulas_mobile/core/design_system/card_app.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -24,175 +25,163 @@ class _LeadDetailsPageState extends ConsumerState<LeadDetailsPage> {
 
     return Scaffold(
       backgroundColor: AppColors.black,
-      body: SafeArea(
-        child: leadsState.when(
-          data: (leads) {
-            final lead = _findLead(leads, widget.leadId);
-            if (lead == null) {
-              return const Center(
-                child: Text(
-                  'Lead no encontrado',
-                  style: TextStyle(color: Colors.white),
-                ),
-              );
-            }
-
-            return Column(
-              children: <Widget>[
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: <Color>[AppColors.yellow, AppColors.yellowSoft],
-                    ),
+      body: leadsState.when(
+        data: (leads) {
+          final lead = _findLead(leads, widget.leadId);
+          if (lead == null) {
+            return const Center(
+              child: Text(
+                'Lead no encontrado',
+                style: TextStyle(color: Colors.white),
+              ),
+            );
+          }
+      
+          return Column(
+            children: <Widget>[
+              Container(
+                width: double.infinity,
+                padding:  EdgeInsets.fromLTRB(16,    MediaQuery.of(context).padding.top + 5, 16, 20),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: <Color>[AppColors.yellow, AppColors.yellowSoft],
                   ),
-                  child: Column(
+                ),
+                child: Column(
+                  children: <Widget>[
+                    Row(
+                      children: <Widget>[
+                        IconButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          icon: const Icon(Icons.arrow_back_rounded),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Lead Details',
+                          style: Theme.of(context).textTheme.headlineSmall
+                              ?.copyWith(color: AppColors.black),
+                        ),
+                        const Spacer(),
+                        const Icon(Icons.edit_rounded),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.34),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: Colors.white54),
+                      ),
+                      child: Row(
+                        children: <Widget>[
+                          CircleAvatar(
+                            radius: 36,
+                            backgroundColor: Colors.white,
+                            child: Text(
+                              _leadDisplayName(lead).substring(0, 1),
+                              style: const TextStyle(
+                                color: AppColors.black,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 26,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                Text(
+                                  _leadDisplayName(lead),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleLarge
+                                      ?.copyWith(color: AppColors.black),
+                                ),
+                                Text(
+                                  _leadEmail(lead),
+                                  style: const TextStyle(
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  lead.companyName,
+                                  style: const TextStyle(
+                                    color: Colors.black54,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.black,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              lead.status.toUpperCase(),
+                              style: const TextStyle(
+                                color: AppColors.yellow,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Container(
+                  width: double.infinity,
+                  decoration: const BoxDecoration(
+                    color: AppColors.panel,
+
+                  ),
+                  child: ListView(
+                    padding: const EdgeInsets.all(16),
                     children: <Widget>[
                       Row(
                         children: <Widget>[
-                          IconButton(
-                            onPressed: () => Navigator.of(context).pop(),
-                            icon: const Icon(Icons.arrow_back_rounded),
+                          Expanded(
+                            child: _TabButton(
+                              active: tab == 0,
+                              label: 'Overview',
+                              onTap: () => setState(() => tab = 0),
+                            ),
                           ),
-                          const SizedBox(width: 6),
-                          Text(
-                            'Lead Details',
-                            style: Theme.of(context).textTheme.headlineSmall
-                                ?.copyWith(color: AppColors.black),
+                          Expanded(
+                            child: _TabButton(
+                              active: tab == 1,
+                              label: 'Analytics',
+                              onTap: () => setState(() => tab = 1),
+                            ),
                           ),
-                          const Spacer(),
-                          const Icon(Icons.edit_rounded),
                         ],
                       ),
                       const SizedBox(height: 12),
-                      Container(
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.34),
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(color: Colors.white54),
-                        ),
-                        child: Row(
-                          children: <Widget>[
-                            CircleAvatar(
-                              radius: 36,
-                              backgroundColor: Colors.white,
-                              child: Text(
-                                _leadDisplayName(lead).substring(0, 1),
-                                style: const TextStyle(
-                                  color: AppColors.black,
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 26,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: <Widget>[
-                                  Text(
-                                    _leadDisplayName(lead),
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .titleLarge
-                                        ?.copyWith(color: AppColors.black),
-                                  ),
-                                  Text(
-                                    _leadEmail(lead),
-                                    style: const TextStyle(
-                                      color: Colors.black87,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    lead.companyName,
-                                    style: const TextStyle(
-                                      color: Colors.black54,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.black,
-                                borderRadius: BorderRadius.circular(100),
-                              ),
-                              child: Text(
-                                lead.status.toUpperCase(),
-                                style: const TextStyle(
-                                  color: AppColors.yellow,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                      if (tab == 0)
+                        CardApp(child: _OverviewCard(lead: lead))
+                      else
+                        _AnalyticsCard(lead: lead),
                     ],
                   ),
                 ),
-                Expanded(
-                  child: Container(
-                    width: double.infinity,
-                    decoration: const BoxDecoration(
-                      color: AppColors.panel,
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(30),
-                        topRight: Radius.circular(30),
-                      ),
-                    ),
-                    child: ListView(
-                      padding: const EdgeInsets.all(16),
-                      children: <Widget>[
-                        Container(
-                          decoration: BoxDecoration(
-                            color: AppColors.panelCard,
-                            borderRadius: BorderRadius.circular(100),
-                            border: Border.all(color: AppColors.panelBorder),
-                          ),
-                          child: Row(
-                            children: <Widget>[
-                              Expanded(
-                                child: _TabButton(
-                                  active: tab == 0,
-                                  label: 'Overview',
-                                  onTap: () => setState(() => tab = 0),
-                                ),
-                              ),
-                              Expanded(
-                                child: _TabButton(
-                                  active: tab == 1,
-                                  label: 'Analytics',
-                                  onTap: () => setState(() => tab = 1),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        if (tab == 0)
-                          _OverviewCard(lead: lead)
-                        else
-                          _AnalyticsCard(lead: lead),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            );
-          },
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, _) => Center(child: Text('Error: $error')),
-        ),
+              ),
+            ],
+          );
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, _) => Center(child: Text('Error: $error')),
       ),
     );
   }
@@ -214,27 +203,22 @@ class _OverviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(
-              'Contact Information',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 12),
-            _Field(label: 'Email', value: _leadEmail(lead)),
-            _Field(label: 'Phone', value: _leadPhone(lead)),
-            _Field(label: 'Company', value: lead.companyName),
-            _Field(label: 'Source', value: lead.source),
-            _Field(label: 'Next Action', value: lead.nextActionDate),
-            if (lead.notes.isNotEmpty)
-              _Field(label: 'Notas', value: lead.notes),
-          ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Text(
+          'Contact Information',
+          style: Theme.of(context).textTheme.headlineSmall,
         ),
-      ),
+        const SizedBox(height: 12),
+        _Field(label: 'Email', value: _leadEmail(lead)),
+        _Field(label: 'Phone', value: _leadPhone(lead)),
+        _Field(label: 'Company', value: lead.companyName),
+        _Field(label: 'Source', value: lead.source),
+        _Field(label: 'Next Action', value: lead.nextActionDate),
+        if (lead.notes.isNotEmpty)
+          _Field(label: 'Notas', value: lead.notes),
+      ],
     );
   }
 }

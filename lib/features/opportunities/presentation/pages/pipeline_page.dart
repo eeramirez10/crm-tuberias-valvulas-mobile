@@ -1,3 +1,4 @@
+import 'package:crm_tuberias_valvulas_mobile/core/design_system/card_app.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -236,22 +237,24 @@ class _PipelinePageState extends ConsumerState<PipelinePage> {
                 label: const Text('Crear deal'),
               ),
               const SizedBox(height: 12),
-              _StageStrip(items: items),
+              CardApp(child: _StageStrip(items: items)),
               const SizedBox(height: 12),
               ...items.map(
                 (item) => Padding(
                   padding: const EdgeInsets.only(bottom: 12),
-                  child: _OpportunityCard(
-                    opportunity: item,
-                    isMoving: _movingOpportunityId == item.id,
-                    isCreatingTask: _creatingTaskOpportunityId == item.id,
-                    onChangeStage: (selected) => _moveToStage(
+                  child: CardApp(
+                    child: _OpportunityCard(
                       opportunity: item,
-                      stage: selected,
-                      showSuccessToast: true,
+                      isMoving: _movingOpportunityId == item.id,
+                      isCreatingTask: _creatingTaskOpportunityId == item.id,
+                      onChangeStage: (selected) => _moveToStage(
+                        opportunity: item,
+                        stage: selected,
+                        showSuccessToast: true,
+                      ),
+                      onMovePlusOne: () => _movePlusOne(item),
+                      onCreateTask: () => _openTaskSheet(item),
                     ),
-                    onMovePlusOne: () => _movePlusOne(item),
-                    onCreateTask: () => _openTaskSheet(item),
                   ),
                 ),
               ),
@@ -282,37 +285,30 @@ class _StageStrip extends StatelessWidget {
       countByStage[item.stage] = (countByStage[item.stage] ?? 0) + 1;
     }
 
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppColors.panelCard,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.panelBorder),
-      ),
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: OpportunityStage.values
-            .take(4)
-            .map(
-              (stage) => Chip(
-                backgroundColor: Colors.white,
-                side: const BorderSide(color: AppColors.panelBorder),
-                avatar: CircleAvatar(
-                  backgroundColor: AppColors.yellow,
-                  child: Text(
-                    '${countByStage[stage]}',
-                    style: const TextStyle(
-                      color: AppColors.black,
-                      fontWeight: FontWeight.w700,
-                    ),
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: OpportunityStage.values
+          .take(4)
+          .map(
+            (stage) => Chip(
+              backgroundColor: Colors.white,
+              side: const BorderSide(color: AppColors.panelBorder),
+              avatar: CircleAvatar(
+                backgroundColor: AppColors.yellow,
+                
+                child: Text(
+                  '${countByStage[stage]}',
+                  style: const TextStyle(
+                    color: AppColors.black,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
-                label: Text(stage.label),
               ),
-            )
-            .toList(growable: false),
-      ),
+              label: Text(stage.label),
+            ),
+          )
+          .toList(growable: false),
     );
   }
 }
@@ -336,128 +332,124 @@ class _OpportunityCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(
-                        opportunity.title,
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        opportunity.customerName,
-                        style: Theme.of(context).textTheme.bodyLarge,
-                      ),
-                    ],
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    opportunity.title,
+                    style: Theme.of(context).textTheme.titleMedium,
                   ),
-                ),
-                Text(
-                  NumberFormat.currency(
-                    locale: 'es_MX',
-                    symbol: '\$',
-                  ).format(opportunity.amount),
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: AppColors.black,
-                    fontWeight: FontWeight.w900,
+                  const SizedBox(height: 3),
+                  Text(
+                    opportunity.customerName,
+                    style: Theme.of(context).textTheme.bodyMedium,
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Row(
-              children: <Widget>[
-                Expanded(
-                  child: LinearProgressIndicator(
-                    minHeight: 8,
-                    value: opportunity.probability,
-                    backgroundColor: Colors.black12,
-                    color: AppColors.yellow,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Text('${(opportunity.probability * 100).toStringAsFixed(0)}%'),
-              ],
-            ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<OpportunityStage>(
-              initialValue: opportunity.stage,
-              decoration: const InputDecoration(
-                labelText: 'Etapa comercial',
-                border: OutlineInputBorder(),
+                ],
               ),
-              items: OpportunityStage.values
-                  .map(
-                    (stage) => DropdownMenuItem<OpportunityStage>(
-                      value: stage,
-                      child: Text(stage.label),
-                    ),
-                  )
-                  .toList(growable: false),
-              onChanged: isMoving
-                  ? null
-                  : (selected) {
-                      if (selected == null) {
-                        return;
-                      }
-                      onChangeStage(selected);
-                    },
             ),
-            const SizedBox(height: 10),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: <Widget>[
-                OutlinedButton.icon(
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: AppColors.black),
-                    foregroundColor: AppColors.black,
-                  ),
-                  onPressed: isMoving ? null : onMovePlusOne,
-                  icon: Icon(
-                    isMoving
-                        ? Icons.hourglass_top_rounded
-                        : Icons.trending_up_rounded,
-                    size: 18,
-                  ),
-                  label: Text(isMoving ? 'Moviendo...' : 'Mover +1 etapa'),
-                ),
-                OutlinedButton.icon(
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: AppColors.black),
-                    foregroundColor: AppColors.black,
-                  ),
-                  onPressed: isCreatingTask ? null : onCreateTask,
-                  icon: Icon(
-                    isCreatingTask
-                        ? Icons.hourglass_top_rounded
-                        : Icons.add_task_rounded,
-                    size: 18,
-                  ),
-                  label: Text(isCreatingTask ? 'Creando...' : 'Crear tarea'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
             Text(
-              'Cierre estimado: ${opportunity.expectedCloseDate}',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: Colors.black54),
+              NumberFormat.currency(
+                locale: 'es_MX',
+                symbol: '\$',
+              ).format(opportunity.amount),
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                color: AppColors.black,
+                fontWeight: FontWeight.w900,
+                fontSize: 18
+              ),
             ),
           ],
         ),
-      ),
+        const SizedBox(height: 10),
+        Row(
+          children: <Widget>[
+            Expanded(
+              child: LinearProgressIndicator(
+                minHeight: 8,
+                value: opportunity.probability,
+                backgroundColor: Colors.black12,
+                color: AppColors.yellow,
+                borderRadius: BorderRadius.circular(20),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Text('${(opportunity.probability * 100).toStringAsFixed(0)}%'),
+          ],
+        ),
+        const SizedBox(height: 12),
+        DropdownButtonFormField<OpportunityStage>(
+          initialValue: opportunity.stage,
+          decoration: const InputDecoration(
+            labelText: 'Etapa comercial',
+            border: OutlineInputBorder(),
+          ),
+          items: OpportunityStage.values
+              .map(
+                (stage) => DropdownMenuItem<OpportunityStage>(
+                  value: stage,
+                  child: Text(stage.label),
+                ),
+              )
+              .toList(growable: false),
+          onChanged: isMoving
+              ? null
+              : (selected) {
+                  if (selected == null) {
+                    return;
+                  }
+                  onChangeStage(selected);
+                },
+        ),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: <Widget>[
+            OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: AppColors.black),
+                foregroundColor: AppColors.black,
+              ),
+              onPressed: isMoving ? null : onMovePlusOne,
+              icon: Icon(
+                isMoving
+                    ? Icons.hourglass_top_rounded
+                    : Icons.trending_up_rounded,
+                size: 18,
+              ),
+              label: Text(isMoving ? 'Moviendo...' : 'Mover +1 etapa'),
+            ),
+            OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: AppColors.black),
+                foregroundColor: AppColors.black,
+              ),
+              onPressed: isCreatingTask ? null : onCreateTask,
+              icon: Icon(
+                isCreatingTask
+                    ? Icons.hourglass_top_rounded
+                    : Icons.add_task_rounded,
+                size: 18,
+              ),
+              label: Text(isCreatingTask ? 'Creando...' : 'Crear tarea'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Cierre estimado: ${opportunity.expectedCloseDate}',
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: Colors.black54),
+        ),
+      ],
     );
   }
 }

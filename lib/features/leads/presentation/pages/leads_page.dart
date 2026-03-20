@@ -1,3 +1,4 @@
+import 'package:crm_tuberias_valvulas_mobile/core/design_system/card_app.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -246,18 +247,20 @@ class _LeadsPageState extends ConsumerState<LeadsPage> {
                 label: const Text('Dar de alta prospecto'),
               ),
               const SizedBox(height: 12),
-              _LeadFilters(items: items),
+              CardApp(child: _LeadFilters(items: items)),
               const SizedBox(height: 12),
               ...items.map(
                 (lead) => Padding(
                   padding: const EdgeInsets.only(bottom: 12),
-                  child: _LeadCard(
-                    lead: lead,
-                    isUpdating: _updatingLeadId == lead.id,
-                    isCreatingTask: _creatingTaskLeadId == lead.id,
-                    onEdit: () => _openEditLeadSheet(lead),
-                    onChangeStatus: (status) => _changeLeadStatus(lead, status),
-                    onCreateTask: () => _openTaskSheet(lead),
+                  child: CardApp(
+                    child: _LeadCard(
+                      lead: lead,
+                      isUpdating: _updatingLeadId == lead.id,
+                      isCreatingTask: _creatingTaskLeadId == lead.id,
+                      onEdit: () => _openEditLeadSheet(lead),
+                      onChangeStatus: (status) => _changeLeadStatus(lead, status),
+                      onCreateTask: () => _openTaskSheet(lead),
+                    ),
                   ),
                 ),
               ),
@@ -285,28 +288,23 @@ class _LeadFilters extends StatelessWidget {
       byStatus[item.status] = (byStatus[item.status] ?? 0) + 1;
     }
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: <Widget>[
-            Chip(
-              label: Text('All (${items.length})'),
-              backgroundColor: AppColors.yellow,
-              labelStyle: const TextStyle(fontWeight: FontWeight.w700),
-            ),
-            ...byStatus.entries.map(
-              (entry) => Chip(
-                label: Text('${entry.key} (${entry.value})'),
-                backgroundColor: Colors.white,
-                side: const BorderSide(color: AppColors.panelBorder),
-              ),
-            ),
-          ],
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: <Widget>[
+        Chip(
+          label: Text('All (${items.length})'),
+          backgroundColor: AppColors.yellow,
+          labelStyle: const TextStyle(fontWeight: FontWeight.w700),
         ),
-      ),
+        ...byStatus.entries.map(
+          (entry) => Chip(
+            label: Text('${entry.key} (${entry.value})'),
+            backgroundColor: Colors.white,
+            side: const BorderSide(color: AppColors.panelBorder),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -338,199 +336,196 @@ class _LeadCard extends ConsumerWidget {
     return InkWell(
       borderRadius: BorderRadius.circular(20),
       onTap: () => context.push('/leads/${lead.id}'),
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
             children: <Widget>[
-              Row(
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: AppColors.yellow.withValues(alpha: 0.32),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Icon(Icons.person_add_alt_1_rounded),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      lead.contactName.isEmpty
+                          ? lead.owner
+                          : lead.contactName,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      lead.companyName,
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                  ],
+                ),
+              ),
+              Column(
                 children: <Widget>[
-                  Container(
-                    width: 56,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      color: AppColors.yellow.withValues(alpha: 0.32),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: const Icon(Icons.person_add_alt_1_rounded),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Text(
-                          lead.contactName.isEmpty
-                              ? lead.owner
-                              : lead.contactName,
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          lead.companyName,
-                          style: Theme.of(context).textTheme.bodyLarge,
-                        ),
-                      ],
-                    ),
-                  ),
-                  Column(
-                    children: <Widget>[
-                      PopupMenuButton<String>(
-                        enabled: !isUpdating,
-                        onSelected: onChangeStatus,
-                        itemBuilder: (context) => _leadStatusOptions
-                            .map(
-                              (status) => PopupMenuItem<String>(
-                                value: status,
-                                child: Text(status),
-                              ),
-                            )
-                            .toList(growable: false),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
+                  PopupMenuButton<String>(
+                    enabled: !isUpdating,
+                    onSelected: onChangeStatus,
+                    itemBuilder: (context) => _leadStatusOptions
+                        .map(
+                          (status) => PopupMenuItem<String>(
+                            value: status,
+                            child: Text(status),
                           ),
-                          decoration: BoxDecoration(
-                            color: AppColors.black,
-                            borderRadius: BorderRadius.circular(100),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: <Widget>[
-                              Text(
-                                lead.status.toUpperCase(),
-                                style: const TextStyle(
-                                  color: AppColors.yellow,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              const Icon(
-                                Icons.keyboard_arrow_down_rounded,
-                                size: 18,
-                                color: AppColors.yellow,
-                              ),
-                            ],
-                          ),
-                        ),
+                        )
+                        .toList(growable: false),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
                       ),
-                      const SizedBox(height: 4),
-                      InkWell(
-                        borderRadius: BorderRadius.circular(12),
-                        onTap: isUpdating ? null : onEdit,
-                        child: Padding(
-                          padding: const EdgeInsets.all(4),
-                          child: Icon(
-                            isUpdating
-                                ? Icons.hourglass_top_rounded
-                                : Icons.edit_rounded,
+                      decoration: BoxDecoration(
+                        color: AppColors.black,
+                        borderRadius: BorderRadius.circular(100),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          Text(
+                            lead.status.toUpperCase(),
+                            style: const TextStyle(
+                              color: AppColors.yellow,
+                              fontWeight: FontWeight.w900,
+                              fontSize: 9
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          const Icon(
+                            Icons.keyboard_arrow_down_rounded,
                             size: 18,
+                            color: AppColors.yellow,
                           ),
-                        ),
+                        ],
                       ),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Row(
-                children: <Widget>[
-                  const Icon(
-                    Icons.source_outlined,
-                    size: 18,
-                    color: Colors.black54,
-                  ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      'Fuente: ${lead.source}',
-                      style: const TextStyle(color: Colors.black54),
-                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Text(
-                    amount,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: AppColors.black,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Row(
-                children: <Widget>[
-                  const Icon(Icons.schedule, size: 18, color: Colors.black54),
-                  const SizedBox(width: 6),
-                  Text('Follow up: ${lead.nextActionDate}'),
-                  const Spacer(),
-                  const Icon(Icons.arrow_forward_rounded),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Row(
-                children: <Widget>[
-                  Expanded(
-                    child: _QuickActionButton(
-                      icon: Icons.call_outlined,
-                      label: 'Llamar',
-                      onTap: () async {
-                        await ref
-                            .read(activitiesTimelineControllerProvider.notifier)
-                            .logInteraction(
-                              type: 'Llamada',
-                              summary:
-                                  'Llamada simulada a ${lead.contactName.isEmpty ? lead.owner : lead.contactName} (${lead.companyName}).',
-                            );
-                        if (context.mounted) {
-                          AppToast.info(
-                            context,
-                            'Simulacion: llamada a ${lead.contactName.isEmpty ? lead.owner : lead.contactName}.',
-                          );
-                        }
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _QuickActionButton(
-                      icon: Icons.chat_bubble_outline_rounded,
-                      label: 'WhatsApp',
-                      onTap: () async {
-                        await ref
-                            .read(activitiesTimelineControllerProvider.notifier)
-                            .logInteraction(
-                              type: 'WhatsApp',
-                              summary:
-                                  'WhatsApp simulado enviado a ${lead.contactName.isEmpty ? lead.owner : lead.contactName} por lead ${lead.companyName}.',
-                            );
-                        if (context.mounted) {
-                          AppToast.info(
-                            context,
-                            'Simulacion: WhatsApp enviado a ${lead.contactName.isEmpty ? lead.owner : lead.contactName}.',
-                          );
-                        }
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _QuickActionButton(
-                      icon: isCreatingTask
-                          ? Icons.hourglass_top_rounded
-                          : Icons.add_task_rounded,
-                      label: isCreatingTask ? 'Creando' : 'Tarea',
-                      onTap: isCreatingTask ? null : onCreateTask,
+                  const SizedBox(height: 4),
+                  InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: isUpdating ? null : onEdit,
+                    child: Padding(
+                      padding: const EdgeInsets.all(4),
+                      child: Icon(
+                        isUpdating
+                            ? Icons.hourglass_top_rounded
+                            : Icons.edit_rounded,
+                        size: 18,
+                      ),
                     ),
                   ),
                 ],
               ),
             ],
           ),
-        ),
+          const SizedBox(height: 10),
+          Row(
+            children: <Widget>[
+              const Icon(
+                Icons.source_outlined,
+                size: 18,
+                color: Colors.black54,
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  'Fuente: ${lead.source}',
+                  style: const TextStyle(color: Colors.black54),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                amount,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: AppColors.black,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 15
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: <Widget>[
+              const Icon(Icons.schedule, size: 18, color: Colors.black54),
+              const SizedBox(width: 6),
+              Text('Follow up: ${lead.nextActionDate}'),
+              const Spacer(),
+              const Icon(Icons.arrow_forward_rounded),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: _QuickActionButton(
+                  icon: Icons.call_outlined,
+                  label: 'Llamar',
+                  onTap: () async {
+                    await ref
+                        .read(activitiesTimelineControllerProvider.notifier)
+                        .logInteraction(
+                          type: 'Llamada',
+                          summary:
+                              'Llamada simulada a ${lead.contactName.isEmpty ? lead.owner : lead.contactName} (${lead.companyName}).',
+                        );
+                    if (context.mounted) {
+                      AppToast.info(
+                        context,
+                        'Simulacion: llamada a ${lead.contactName.isEmpty ? lead.owner : lead.contactName}.',
+                      );
+                    }
+                  },
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _QuickActionButton(
+                  icon: Icons.chat_bubble_outline_rounded,
+                  label: 'WhatsApp',
+                  onTap: () async {
+                    await ref
+                        .read(activitiesTimelineControllerProvider.notifier)
+                        .logInteraction(
+                          type: 'WhatsApp',
+                          summary:
+                              'WhatsApp simulado enviado a ${lead.contactName.isEmpty ? lead.owner : lead.contactName} por lead ${lead.companyName}.',
+                        );
+                    if (context.mounted) {
+                      AppToast.info(
+                        context,
+                        'Simulacion: WhatsApp enviado a ${lead.contactName.isEmpty ? lead.owner : lead.contactName}.',
+                      );
+                    }
+                  },
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _QuickActionButton(
+                  icon: isCreatingTask
+                      ? Icons.hourglass_top_rounded
+                      : Icons.add_task_rounded,
+                  label: isCreatingTask ? 'Creando' : 'Tarea',
+                  onTap: isCreatingTask ? null : onCreateTask,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

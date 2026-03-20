@@ -27,6 +27,7 @@ class CrmPageShell extends StatelessWidget {
         ),
       ),
       child: SafeArea(
+        bottom: false,
         child: Column(
           children: <Widget>[
             Padding(
@@ -64,12 +65,9 @@ class CrmPageShell extends StatelessWidget {
                 width: double.infinity,
                 decoration: const BoxDecoration(
                   color: AppColors.panel,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(34),
-                    topRight: Radius.circular(34),
-                  ),
+
                 ),
-                child: child,
+                child: SizedBox.expand(child:child ,) ,
               ),
             ),
           ],
