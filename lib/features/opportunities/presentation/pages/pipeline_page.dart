@@ -6,6 +6,7 @@ import '../../../../core/design_system/app_colors.dart';
 import '../../../../core/design_system/app_toast.dart';
 import '../../../../core/design_system/crm_page_shell.dart';
 import '../../../activities/presentation/providers/activities_providers.dart';
+import '../../../customers/domain/entities/customer.dart';
 import '../../../customers/presentation/providers/customers_providers.dart';
 import '../../../dashboard/presentation/providers/dashboard_providers.dart';
 import '../../../tasks/domain/entities/create_task_input.dart';
@@ -31,6 +32,15 @@ class _PipelinePageState extends ConsumerState<PipelinePage> {
       return;
     }
 
+    final customers = await ref.read(customersProvider().future);
+    if (!mounted) {
+      return;
+    }
+    if (customers.isEmpty) {
+      AppToast.info(context, 'No hay clientes registrados para crear deals.');
+      return;
+    }
+
     final payload = await showModalBottomSheet<_CreateDealSheetResult>(
       context: context,
       isScrollControlled: true,
@@ -39,7 +49,7 @@ class _PipelinePageState extends ConsumerState<PipelinePage> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
       ),
-      builder: (_) => const _CreateDealSheet(),
+      builder: (_) => _CreateDealSheet(customers: customers),
     );
 
     if (!mounted || payload == null) {
@@ -459,7 +469,9 @@ class _CreateDealSheetResult {
 }
 
 class _CreateDealSheet extends StatefulWidget {
-  const _CreateDealSheet();
+  const _CreateDealSheet({required this.customers});
+
+  final List<Customer> customers;
 
   @override
   State<_CreateDealSheet> createState() => _CreateDealSheetState();
@@ -467,17 +479,22 @@ class _CreateDealSheet extends StatefulWidget {
 
 class _CreateDealSheetState extends State<_CreateDealSheet> {
   final _formKey = GlobalKey<FormState>();
-  final _customerController = TextEditingController();
   final _titleController = TextEditingController();
   final _amountController = TextEditingController();
 
+  late String _selectedCustomerName;
   OpportunityStage _selectedStage = OpportunityStage.requirement;
   DateTime _expectedDate = DateTime.now().add(const Duration(days: 14));
   double _probability = 0.5;
 
   @override
+  void initState() {
+    super.initState();
+    _selectedCustomerName = widget.customers.first.name;
+  }
+
+  @override
   void dispose() {
-    _customerController.dispose();
     _titleController.dispose();
     _amountController.dispose();
     super.dispose();
@@ -515,7 +532,7 @@ class _CreateDealSheetState extends State<_CreateDealSheet> {
     Navigator.of(context).pop(
       _CreateDealSheetResult(
         input: CreateOpportunityInput(
-          customerName: _customerController.text.trim(),
+          customerName: _selectedCustomerName,
           title: _titleController.text.trim(),
           stage: _selectedStage,
           amount: amount,
@@ -564,13 +581,54 @@ class _CreateDealSheetState extends State<_CreateDealSheet> {
                 ).textTheme.bodyMedium?.copyWith(color: Colors.black54),
               ),
               const SizedBox(height: 16),
-              TextFormField(
-                controller: _customerController,
+              FormField<String>(
+                initialValue: _selectedCustomerName,
                 validator: _requiredField,
-                decoration: const InputDecoration(
-                  labelText: 'Cliente',
-                  hintText: 'Empresa cliente',
-                ),
+                builder: (field) {
+                  return InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () async {
+                      final selected = await showModalBottomSheet<String>(
+                        context: context,
+                        isScrollControlled: true,
+                        useSafeArea: true,
+                        backgroundColor: AppColors.panel,
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.vertical(
+                            top: Radius.circular(30),
+                          ),
+                        ),
+                        builder: (_) => _CustomerPickerSheet(
+                          customers: widget.customers,
+                          selectedName: _selectedCustomerName,
+                        ),
+                      );
+                      if (selected != null) {
+                        setState(() => _selectedCustomerName = selected);
+                        field.didChange(selected);
+                      }
+                    },
+                    child: InputDecorator(
+                      decoration: InputDecoration(
+                        labelText: 'Cliente',
+                        errorText: field.errorText,
+                      ),
+                      child: Row(
+                        children: <Widget>[
+                          Expanded(
+                            child: Text(
+                              _selectedCustomerName,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          const Icon(Icons.search_rounded, size: 20),
+                        ],
+                      ),
+                    ),
+                  );
+                },
               ),
               const SizedBox(height: 10),
               TextFormField(
@@ -687,6 +745,100 @@ class _OpportunityTaskSheetResult {
   final String title;
   final String type;
   final String dueDate;
+}
+
+class _CustomerPickerSheet extends StatefulWidget {
+  const _CustomerPickerSheet({
+    required this.customers,
+    required this.selectedName,
+  });
+
+  final List<Customer> customers;
+  final String selectedName;
+
+  @override
+  State<_CustomerPickerSheet> createState() => _CustomerPickerSheetState();
+}
+
+class _CustomerPickerSheetState extends State<_CustomerPickerSheet> {
+  final _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final query = _searchController.text.trim().toLowerCase();
+    final filtered = widget.customers
+        .where(
+          (customer) =>
+              customer.name.toLowerCase().contains(query) ||
+              customer.contactName.toLowerCase().contains(query),
+        )
+        .toList(growable: false);
+
+    return SizedBox(
+      height: MediaQuery.sizeOf(context).height * 0.72,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          const SizedBox(height: 10),
+          Center(
+            child: Container(
+              width: 66,
+              height: 7,
+              decoration: BoxDecoration(
+                color: AppColors.panelBorder,
+                borderRadius: BorderRadius.circular(100),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+            child: Text(
+              'Seleccionar cliente',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: TextField(
+              controller: _searchController,
+              onChanged: (_) => setState(() {}),
+              decoration: const InputDecoration(
+                prefixIcon: Icon(Icons.search_rounded),
+                labelText: 'Buscar cliente',
+                hintText: 'Nombre de empresa o contacto',
+              ),
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: filtered.length,
+              itemBuilder: (context, index) {
+                final customer = filtered[index];
+                final selected = customer.name == widget.selectedName;
+                return ListTile(
+                  onTap: () => Navigator.of(context).pop(customer.name),
+                  leading: Icon(
+                    selected
+                        ? Icons.radio_button_checked_rounded
+                        : Icons.radio_button_unchecked_rounded,
+                    color: AppColors.black,
+                  ),
+                  title: Text(customer.name),
+                  subtitle: Text('${customer.contactName} • ${customer.city}'),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _OpportunityTaskSheet extends StatefulWidget {
