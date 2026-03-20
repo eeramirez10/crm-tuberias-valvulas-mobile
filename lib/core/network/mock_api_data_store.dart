@@ -399,56 +399,8 @@ class MockApiDataStore {
           ],
         },
       ],
-      tasks: <Map<String, dynamic>>[
-        {
-          'id': 'task-001',
-          'title': 'Llamar para confirmar especificaciones ASTM',
-          'type': 'Llamada',
-          'due_date': '2026-03-19',
-          'related_to': 'opp-001',
-          'completed': false,
-        },
-        {
-          'id': 'task-002',
-          'title': 'Enviar cotizacion version 2',
-          'type': 'Cotizacion',
-          'due_date': '2026-03-20',
-          'related_to': 'opp-002',
-          'completed': false,
-        },
-        {
-          'id': 'task-003',
-          'title': 'Agendar visita tecnica en planta',
-          'type': 'Visita',
-          'due_date': '2026-03-21',
-          'related_to': 'lead-003',
-          'completed': false,
-        },
-      ],
-      activities: <Map<String, dynamic>>[
-        {
-          'id': 'act-001',
-          'type': 'Llamada',
-          'summary': 'Cliente solicito fichas tecnicas de valvulas ANSI 150.',
-          'owner': 'Erick Ramirez',
-          'created_at': '2026-03-19T09:10:00Z',
-        },
-        {
-          'id': 'act-002',
-          'type': 'Nota',
-          'summary':
-              'Se detecta oportunidad de cross-sell con conexiones bridadas.',
-          'owner': 'Mariana Solis',
-          'created_at': '2026-03-19T10:35:00Z',
-        },
-        {
-          'id': 'act-003',
-          'type': 'Visita',
-          'summary': 'Se revisaron medidas reales de instalacion en sitio.',
-          'owner': 'Erick Ramirez',
-          'created_at': '2026-03-18T17:15:00Z',
-        },
-      ],
+      tasks: <Map<String, dynamic>>[],
+      activities: <Map<String, dynamic>>[],
     );
   }
 
