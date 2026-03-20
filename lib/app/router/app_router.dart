@@ -4,18 +4,13 @@ import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/design_system/app_colors.dart';
-import '../../features/ai_assistant/presentation/pages/ai_assistant_page.dart';
+import '../../features/activities/presentation/pages/commercial_history_page.dart';
 import '../../features/customers/presentation/pages/customer_details_page.dart';
 import '../../features/customers/presentation/pages/customers_page.dart';
 import '../../features/dashboard/presentation/pages/dashboard_page.dart';
 import '../../features/leads/presentation/pages/lead_details_page.dart';
 import '../../features/leads/presentation/pages/leads_page.dart';
-import '../../features/orders/presentation/pages/order_details_page.dart';
-import '../../features/orders/presentation/pages/orders_page.dart';
 import '../../features/opportunities/presentation/pages/pipeline_page.dart';
-import '../../features/products/presentation/pages/products_page.dart';
-import '../../features/quotes/presentation/pages/quote_details_page.dart';
-import '../../features/quotes/presentation/pages/quotes_page.dart';
 
 part 'app_router.g.dart';
 
@@ -65,23 +60,6 @@ GoRouter appRouter(Ref ref) {
           StatefulShellBranch(
             routes: <RouteBase>[
               GoRoute(
-                path: '/quotes',
-                builder: (context, state) => const QuotesPage(),
-                routes: <RouteBase>[
-                  GoRoute(
-                    path: ':quoteId',
-                    builder: (context, state) {
-                      final quoteId = state.pathParameters['quoteId'] ?? '';
-                      return QuoteDetailsPage(quoteId: quoteId);
-                    },
-                  ),
-                ],
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: <RouteBase>[
-              GoRoute(
                 path: '/customers',
                 builder: (context, state) => const CustomersPage(),
                 routes: <RouteBase>[
@@ -100,33 +78,8 @@ GoRouter appRouter(Ref ref) {
           StatefulShellBranch(
             routes: <RouteBase>[
               GoRoute(
-                path: '/orders',
-                builder: (context, state) => const OrdersPage(),
-                routes: <RouteBase>[
-                  GoRoute(
-                    path: ':orderId',
-                    builder: (context, state) {
-                      final orderId = state.pathParameters['orderId'] ?? '';
-                      return OrderDetailsPage(orderId: orderId);
-                    },
-                  ),
-                ],
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: <RouteBase>[
-              GoRoute(
-                path: '/products',
-                builder: (context, state) => const ProductsPage(),
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: <RouteBase>[
-              GoRoute(
-                path: '/ai',
-                builder: (context, state) => const AiAssistantPage(),
+                path: '/history',
+                builder: (context, state) => const CommercialHistoryPage(),
               ),
             ],
           ),
@@ -249,50 +202,29 @@ class _ShellScaffold extends StatelessWidget {
                   _MenuTile(
                     selected: navigationShell.currentIndex == 1,
                     icon: Icons.trending_up_rounded,
-                    label: 'Leads',
+                    label: 'Prospectos',
                     onTap: () => _goTo(1, context),
                   ),
                   const SizedBox(height: 8),
                   _MenuTile(
                     selected: navigationShell.currentIndex == 2,
                     icon: Icons.handshake_rounded,
-                    label: 'Deals',
+                    label: 'Pipeline',
                     onTap: () => _goTo(2, context),
                   ),
                   const SizedBox(height: 8),
                   _MenuTile(
                     selected: navigationShell.currentIndex == 3,
-                    icon: Icons.receipt_long_rounded,
-                    label: 'Cotizaciones',
+                    icon: Icons.business_rounded,
+                    label: 'Clientes',
                     onTap: () => _goTo(3, context),
                   ),
                   const SizedBox(height: 8),
                   _MenuTile(
                     selected: navigationShell.currentIndex == 4,
-                    icon: Icons.business_rounded,
-                    label: 'Clients',
+                    icon: Icons.assignment_turned_in_rounded,
+                    label: 'Seguimiento',
                     onTap: () => _goTo(4, context),
-                  ),
-                  const SizedBox(height: 8),
-                  _MenuTile(
-                    selected: navigationShell.currentIndex == 5,
-                    icon: Icons.local_shipping_rounded,
-                    label: 'Pedidos',
-                    onTap: () => _goTo(5, context),
-                  ),
-                  const SizedBox(height: 8),
-                  _MenuTile(
-                    selected: navigationShell.currentIndex == 6,
-                    icon: Icons.inventory_2_rounded,
-                    label: 'Catalogo',
-                    onTap: () => _goTo(6, context),
-                  ),
-                  const SizedBox(height: 8),
-                  _MenuTile(
-                    selected: navigationShell.currentIndex == 7,
-                    icon: Icons.auto_awesome_rounded,
-                    label: 'Asistente IA',
-                    onTap: () => _goTo(7, context),
                   ),
                   const SizedBox(height: 12),
                   const Divider(height: 1),
