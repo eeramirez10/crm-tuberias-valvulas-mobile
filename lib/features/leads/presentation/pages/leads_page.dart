@@ -8,6 +8,7 @@ import '../../../../core/design_system/app_toast.dart';
 import '../../../../core/design_system/crm_page_shell.dart';
 import '../../../activities/presentation/providers/activities_providers.dart';
 import '../../../dashboard/presentation/providers/dashboard_providers.dart';
+import '../../../tasks/domain/entities/create_task_input.dart';
 import '../../../tasks/presentation/providers/tasks_providers.dart';
 import '../../domain/entities/create_lead_input.dart';
 import '../../domain/entities/lead.dart';
@@ -24,6 +25,7 @@ class LeadsPage extends ConsumerStatefulWidget {
 class _LeadsPageState extends ConsumerState<LeadsPage> {
   bool _creatingLead = false;
   String? _updatingLeadId;
+  String? _creatingTaskLeadId;
 
   Future<void> _openCreateLeadSheet() async {
     if (_creatingLead) {
@@ -52,14 +54,13 @@ class _LeadsPageState extends ConsumerState<LeadsPage> {
           .call(payload.input);
 
       if (payload.createInitialTask) {
-        await ref
-            .read(tasksControllerProvider.notifier)
-            .createFollowUpTask(
-              title: 'Seguimiento inicial ${lead.companyName}',
-              type: 'Seguimiento',
-              dueDate: lead.nextActionDate,
-              relatedTo: lead.id,
-            );
+        await _createTaskForLead(
+          lead: lead,
+          title: 'Seguimiento inicial ${lead.companyName}',
+          type: 'Seguimiento',
+          dueDate: lead.nextActionDate,
+          showSuccessToast: false,
+        );
       }
 
       ref.invalidate(leadsProvider());
@@ -138,6 +139,71 @@ class _LeadsPageState extends ConsumerState<LeadsPage> {
     }
   }
 
+  Future<void> _openTaskSheet(Lead lead) async {
+    if (_creatingTaskLeadId != null) {
+      return;
+    }
+
+    final payload = await showModalBottomSheet<_LeadTaskSheetResult>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: AppColors.panel,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+      ),
+      builder: (_) => _LeadTaskSheet(lead: lead),
+    );
+
+    if (!mounted || payload == null) {
+      return;
+    }
+
+    await _createTaskForLead(
+      lead: lead,
+      title: payload.title,
+      type: payload.type,
+      dueDate: payload.dueDate,
+      showSuccessToast: true,
+    );
+  }
+
+  Future<void> _createTaskForLead({
+    required Lead lead,
+    required String title,
+    required String type,
+    required String dueDate,
+    required bool showSuccessToast,
+  }) async {
+    setState(() => _creatingTaskLeadId = lead.id);
+    try {
+      await ref
+          .read(createTaskUseCaseProvider)
+          .call(
+            CreateTaskInput(
+              title: title,
+              type: type,
+              dueDate: dueDate,
+              relatedTo: lead.id,
+            ),
+          );
+      ref.invalidate(tasksControllerProvider);
+      ref.invalidate(dashboardSummaryProvider);
+      ref.invalidate(activitiesTimelineControllerProvider);
+      if (mounted && showSuccessToast) {
+        AppToast.success(context, 'Tarea creada para ${lead.companyName}.');
+      }
+    } catch (_) {
+      if (mounted) {
+        AppToast.info(context, 'No se pudo crear la tarea.');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _creatingTaskLeadId = null);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final leadsState = ref.watch(leadsProvider());
@@ -188,8 +254,10 @@ class _LeadsPageState extends ConsumerState<LeadsPage> {
                   child: _LeadCard(
                     lead: lead,
                     isUpdating: _updatingLeadId == lead.id,
+                    isCreatingTask: _creatingTaskLeadId == lead.id,
                     onEdit: () => _openEditLeadSheet(lead),
                     onChangeStatus: (status) => _changeLeadStatus(lead, status),
+                    onCreateTask: () => _openTaskSheet(lead),
                   ),
                 ),
               ),
@@ -247,14 +315,18 @@ class _LeadCard extends ConsumerWidget {
   const _LeadCard({
     required this.lead,
     required this.isUpdating,
+    required this.isCreatingTask,
     required this.onEdit,
     required this.onChangeStatus,
+    required this.onCreateTask,
   });
 
   final Lead lead;
   final bool isUpdating;
+  final bool isCreatingTask;
   final VoidCallback onEdit;
   final ValueChanged<String> onChangeStatus;
+  final VoidCallback onCreateTask;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -447,32 +519,11 @@ class _LeadCard extends ConsumerWidget {
                   const SizedBox(width: 8),
                   Expanded(
                     child: _QuickActionButton(
-                      icon: Icons.add_task_rounded,
-                      label: 'Tarea',
-                      onTap: () async {
-                        await ref
-                            .read(tasksControllerProvider.notifier)
-                            .createFollowUpTask(
-                              title: 'Seguimiento lead ${lead.companyName}',
-                              type: 'Seguimiento',
-                              dueDate: lead.nextActionDate,
-                              relatedTo: lead.id,
-                            );
-                        await ref
-                            .read(activitiesTimelineControllerProvider.notifier)
-                            .logInteraction(
-                              type: 'Tarea',
-                              summary:
-                                  'Tarea creada para lead ${lead.companyName}.',
-                            );
-                        ref.invalidate(leadsProvider());
-                        if (context.mounted) {
-                          AppToast.success(
-                            context,
-                            'Tarea creada en mock API.',
-                          );
-                        }
-                      },
+                      icon: isCreatingTask
+                          ? Icons.hourglass_top_rounded
+                          : Icons.add_task_rounded,
+                      label: isCreatingTask ? 'Creando' : 'Tarea',
+                      onTap: isCreatingTask ? null : onCreateTask,
                     ),
                   ),
                 ],
@@ -494,7 +545,7 @@ class _QuickActionButton extends StatelessWidget {
 
   final IconData icon;
   final String label;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -1080,6 +1131,179 @@ class _UpdateLeadSheetState extends State<_UpdateLeadSheet> {
   }
 }
 
+class _LeadTaskSheetResult {
+  const _LeadTaskSheetResult({
+    required this.title,
+    required this.type,
+    required this.dueDate,
+  });
+
+  final String title;
+  final String type;
+  final String dueDate;
+}
+
+class _LeadTaskSheet extends StatefulWidget {
+  const _LeadTaskSheet({required this.lead});
+
+  final Lead lead;
+
+  @override
+  State<_LeadTaskSheet> createState() => _LeadTaskSheetState();
+}
+
+class _LeadTaskSheetState extends State<_LeadTaskSheet> {
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _titleController;
+  String _selectedType = _taskTypeOptions.first;
+  late DateTime _selectedDueDate;
+
+  @override
+  void initState() {
+    super.initState();
+    _titleController = TextEditingController(
+      text: 'Seguimiento lead ${widget.lead.companyName}',
+    );
+    _selectedDueDate =
+        DateTime.tryParse(widget.lead.nextActionDate) ??
+        DateTime.now().add(const Duration(days: 2));
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDueDate,
+      firstDate: DateTime.now().subtract(const Duration(days: 365)),
+      lastDate: DateTime.now().add(const Duration(days: 730)),
+    );
+    if (picked != null) {
+      setState(() => _selectedDueDate = picked);
+    }
+  }
+
+  void _submit() {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+    Navigator.of(context).pop(
+      _LeadTaskSheetResult(
+        title: _titleController.text.trim(),
+        type: _selectedType,
+        dueDate: DateFormat('yyyy-MM-dd').format(_selectedDueDate),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: EdgeInsets.fromLTRB(
+          16,
+          12,
+          16,
+          MediaQuery.viewInsetsOf(context).bottom + 20,
+        ),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Center(
+                child: Container(
+                  width: 66,
+                  height: 7,
+                  decoration: BoxDecoration(
+                    color: AppColors.panelBorder,
+                    borderRadius: BorderRadius.circular(100),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+              Text(
+                'Nueva tarea',
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Lead: ${widget.lead.companyName}',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: Colors.black54),
+              ),
+              const SizedBox(height: 16),
+              _InputField(
+                controller: _titleController,
+                label: 'Titulo',
+                hint: 'Seguimiento de especificaciones',
+                validator: _requiredField,
+              ),
+              const SizedBox(height: 10),
+              DropdownButtonFormField<String>(
+                initialValue: _selectedType,
+                decoration: const InputDecoration(labelText: 'Tipo'),
+                items: _taskTypeOptions
+                    .map((type) {
+                      return DropdownMenuItem<String>(
+                        value: type,
+                        child: Text(type),
+                      );
+                    })
+                    .toList(growable: false),
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() => _selectedType = value);
+                  }
+                },
+              ),
+              const SizedBox(height: 10),
+              InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: _pickDate,
+                child: InputDecorator(
+                  decoration: const InputDecoration(labelText: 'Fecha limite'),
+                  child: Text(
+                    DateFormat('yyyy-MM-dd').format(_selectedDueDate),
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('Cancelar'),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: FilledButton(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppColors.black,
+                        foregroundColor: AppColors.yellow,
+                      ),
+                      onPressed: _submit,
+                      child: const Text('Crear tarea'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _InputField extends StatelessWidget {
   const _InputField({
     required this.controller,
@@ -1127,6 +1351,13 @@ String? _emailValidator(String? value) {
 }
 
 const _leadStatusOptions = <String>['Nuevo', 'Contactado', 'Calificado'];
+const _taskTypeOptions = <String>[
+  'Seguimiento',
+  'Llamada',
+  'Visita',
+  'Cotizacion',
+  'Correo',
+];
 
 UpdateLeadInput _leadToUpdateInput(Lead lead, {String? status}) {
   return UpdateLeadInput(
