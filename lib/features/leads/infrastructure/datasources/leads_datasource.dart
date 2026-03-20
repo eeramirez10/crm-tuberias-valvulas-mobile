@@ -5,6 +5,8 @@ import '../dtos/create_lead_request_dto.dart';
 import '../dtos/create_lead_response_dto.dart';
 import '../dtos/get_leads_request_dto.dart';
 import '../dtos/get_leads_response_dto.dart';
+import '../dtos/update_lead_request_dto.dart';
+import '../dtos/update_lead_response_dto.dart';
 
 class LeadsDatasource {
   const LeadsDatasource(this._httpAdapter);
@@ -29,5 +31,15 @@ class LeadsDatasource {
     );
 
     return CreateLeadResponseDto.fromJson(response);
+  }
+
+  Future<UpdateLeadResponseDto> updateLead(UpdateLeadRequestDto request) async {
+    final response = await _httpAdapter.request(
+      path: ApiEndpoints.leadById(request.leadId),
+      method: HttpMethod.patch,
+      data: request.toJson(),
+    );
+
+    return UpdateLeadResponseDto.fromJson(response);
   }
 }

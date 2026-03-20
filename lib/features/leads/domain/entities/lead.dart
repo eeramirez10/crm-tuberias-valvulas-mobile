@@ -24,4 +24,32 @@ class Lead {
   final String nextActionDate;
   final String owner;
   final String notes;
+
+  Lead copyWith({
+    String? id,
+    String? companyName,
+    String? contactName,
+    String? contactPhone,
+    String? contactEmail,
+    String? source,
+    String? status,
+    double? estimatedAmount,
+    String? nextActionDate,
+    String? owner,
+    String? notes,
+  }) {
+    return Lead(
+      id: id ?? this.id,
+      companyName: companyName ?? this.companyName,
+      contactName: contactName ?? this.contactName,
+      contactPhone: contactPhone ?? this.contactPhone,
+      contactEmail: contactEmail ?? this.contactEmail,
+      source: source ?? this.source,
+      status: status ?? this.status,
+      estimatedAmount: estimatedAmount ?? this.estimatedAmount,
+      nextActionDate: nextActionDate ?? this.nextActionDate,
+      owner: owner ?? this.owner,
+      notes: notes ?? this.notes,
+    );
+  }
 }

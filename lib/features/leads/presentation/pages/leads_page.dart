@@ -11,6 +11,7 @@ import '../../../dashboard/presentation/providers/dashboard_providers.dart';
 import '../../../tasks/presentation/providers/tasks_providers.dart';
 import '../../domain/entities/create_lead_input.dart';
 import '../../domain/entities/lead.dart';
+import '../../domain/entities/update_lead_input.dart';
 import '../providers/leads_providers.dart';
 
 class LeadsPage extends ConsumerStatefulWidget {
@@ -22,6 +23,7 @@ class LeadsPage extends ConsumerStatefulWidget {
 
 class _LeadsPageState extends ConsumerState<LeadsPage> {
   bool _creatingLead = false;
+  String? _updatingLeadId;
 
   Future<void> _openCreateLeadSheet() async {
     if (_creatingLead) {
@@ -78,6 +80,64 @@ class _LeadsPageState extends ConsumerState<LeadsPage> {
     }
   }
 
+  Future<void> _openEditLeadSheet(Lead lead) async {
+    if (_updatingLeadId != null) {
+      return;
+    }
+
+    final payload = await showModalBottomSheet<_UpdateLeadSheetResult>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: AppColors.panel,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+      ),
+      builder: (_) => _UpdateLeadSheet(lead: lead),
+    );
+
+    if (!mounted || payload == null) {
+      return;
+    }
+
+    await _updateLead(payload.input, successMessage: 'Prospecto actualizado.');
+  }
+
+  Future<void> _changeLeadStatus(Lead lead, String nextStatus) async {
+    if (lead.status == nextStatus || _updatingLeadId != null) {
+      return;
+    }
+
+    await _updateLead(
+      _leadToUpdateInput(lead, status: nextStatus),
+      successMessage: 'Etapa actualizada a $nextStatus.',
+    );
+  }
+
+  Future<void> _updateLead(
+    UpdateLeadInput input, {
+    required String successMessage,
+  }) async {
+    setState(() => _updatingLeadId = input.leadId);
+    try {
+      await ref.read(updateLeadUseCaseProvider).call(input);
+      ref.invalidate(leadsProvider());
+      ref.invalidate(dashboardSummaryProvider);
+      ref.invalidate(activitiesTimelineControllerProvider);
+      if (mounted) {
+        AppToast.success(context, successMessage);
+      }
+    } catch (_) {
+      if (mounted) {
+        AppToast.info(context, 'No se pudo actualizar el prospecto.');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _updatingLeadId = null);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final leadsState = ref.watch(leadsProvider());
@@ -125,7 +185,12 @@ class _LeadsPageState extends ConsumerState<LeadsPage> {
               ...items.map(
                 (lead) => Padding(
                   padding: const EdgeInsets.only(bottom: 12),
-                  child: _LeadCard(lead: lead),
+                  child: _LeadCard(
+                    lead: lead,
+                    isUpdating: _updatingLeadId == lead.id,
+                    onEdit: () => _openEditLeadSheet(lead),
+                    onChangeStatus: (status) => _changeLeadStatus(lead, status),
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
@@ -179,9 +244,17 @@ class _LeadFilters extends StatelessWidget {
 }
 
 class _LeadCard extends ConsumerWidget {
-  const _LeadCard({required this.lead});
+  const _LeadCard({
+    required this.lead,
+    required this.isUpdating,
+    required this.onEdit,
+    required this.onChangeStatus,
+  });
 
   final Lead lead;
+  final bool isUpdating;
+  final VoidCallback onEdit;
+  final ValueChanged<String> onChangeStatus;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -229,22 +302,63 @@ class _LeadCard extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.black,
-                      borderRadius: BorderRadius.circular(100),
-                    ),
-                    child: Text(
-                      lead.status.toUpperCase(),
-                      style: const TextStyle(
-                        color: AppColors.yellow,
-                        fontWeight: FontWeight.w700,
+                  Column(
+                    children: <Widget>[
+                      PopupMenuButton<String>(
+                        enabled: !isUpdating,
+                        onSelected: onChangeStatus,
+                        itemBuilder: (context) => _leadStatusOptions
+                            .map(
+                              (status) => PopupMenuItem<String>(
+                                value: status,
+                                child: Text(status),
+                              ),
+                            )
+                            .toList(growable: false),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.black,
+                            borderRadius: BorderRadius.circular(100),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              Text(
+                                lead.status.toUpperCase(),
+                                style: const TextStyle(
+                                  color: AppColors.yellow,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              const Icon(
+                                Icons.keyboard_arrow_down_rounded,
+                                size: 18,
+                                color: AppColors.yellow,
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
+                      const SizedBox(height: 4),
+                      InkWell(
+                        borderRadius: BorderRadius.circular(12),
+                        onTap: isUpdating ? null : onEdit,
+                        child: Padding(
+                          padding: const EdgeInsets.all(4),
+                          child: Icon(
+                            isUpdating
+                                ? Icons.hourglass_top_rounded
+                                : Icons.edit_rounded,
+                            size: 18,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -574,7 +688,7 @@ class _CreateLeadSheetState extends State<_CreateLeadSheet> {
                     child: DropdownButtonFormField<String>(
                       initialValue: _selectedStatus,
                       decoration: const InputDecoration(labelText: 'Etapa'),
-                      items: const <String>['Nuevo', 'Contactado', 'Calificado']
+                      items: _leadStatusOptions
                           .map((status) {
                             return DropdownMenuItem<String>(
                               value: status,
@@ -676,6 +790,296 @@ class _CreateLeadSheetState extends State<_CreateLeadSheet> {
   }
 }
 
+class _UpdateLeadSheetResult {
+  const _UpdateLeadSheetResult({required this.input});
+
+  final UpdateLeadInput input;
+}
+
+class _UpdateLeadSheet extends StatefulWidget {
+  const _UpdateLeadSheet({required this.lead});
+
+  final Lead lead;
+
+  @override
+  State<_UpdateLeadSheet> createState() => _UpdateLeadSheetState();
+}
+
+class _UpdateLeadSheetState extends State<_UpdateLeadSheet> {
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _companyController;
+  late final TextEditingController _contactController;
+  late final TextEditingController _phoneController;
+  late final TextEditingController _emailController;
+  late final TextEditingController _sourceController;
+  late final TextEditingController _amountController;
+  late final TextEditingController _ownerController;
+  late final TextEditingController _notesController;
+
+  late String _selectedStatus;
+  late DateTime _nextActionDate;
+
+  @override
+  void initState() {
+    super.initState();
+    _companyController = TextEditingController(text: widget.lead.companyName);
+    _contactController = TextEditingController(
+      text: widget.lead.contactName.isEmpty
+          ? widget.lead.owner
+          : widget.lead.contactName,
+    );
+    _phoneController = TextEditingController(text: widget.lead.contactPhone);
+    _emailController = TextEditingController(text: widget.lead.contactEmail);
+    _sourceController = TextEditingController(text: widget.lead.source);
+    _amountController = TextEditingController(
+      text: widget.lead.estimatedAmount.toStringAsFixed(0),
+    );
+    _ownerController = TextEditingController(text: widget.lead.owner);
+    _notesController = TextEditingController(text: widget.lead.notes);
+
+    _selectedStatus = _leadStatusOptions.contains(widget.lead.status)
+        ? widget.lead.status
+        : 'Nuevo';
+    _nextActionDate =
+        DateTime.tryParse(widget.lead.nextActionDate) ??
+        DateTime.now().add(const Duration(days: 2));
+  }
+
+  @override
+  void dispose() {
+    _companyController.dispose();
+    _contactController.dispose();
+    _phoneController.dispose();
+    _emailController.dispose();
+    _sourceController.dispose();
+    _amountController.dispose();
+    _ownerController.dispose();
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _nextActionDate,
+      firstDate: DateTime.now().subtract(const Duration(days: 365)),
+      lastDate: DateTime.now().add(const Duration(days: 730)),
+    );
+
+    if (picked != null) {
+      setState(() => _nextActionDate = picked);
+    }
+  }
+
+  void _submit() {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    final amount = _parseAmount(_amountController.text);
+    if (amount <= 0) {
+      AppToast.info(context, 'Ingresa un monto estimado mayor a 0.');
+      return;
+    }
+
+    Navigator.of(context).pop(
+      _UpdateLeadSheetResult(
+        input: UpdateLeadInput(
+          leadId: widget.lead.id,
+          companyName: _companyController.text.trim(),
+          contactName: _contactController.text.trim(),
+          contactPhone: _phoneController.text.trim(),
+          contactEmail: _emailController.text.trim(),
+          source: _sourceController.text.trim(),
+          status: _selectedStatus,
+          estimatedAmount: amount,
+          nextActionDate: DateFormat('yyyy-MM-dd').format(_nextActionDate),
+          owner: _ownerController.text.trim(),
+          notes: _notesController.text.trim(),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: EdgeInsets.fromLTRB(
+          16,
+          12,
+          16,
+          MediaQuery.viewInsetsOf(context).bottom + 20,
+        ),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Center(
+                child: Container(
+                  width: 66,
+                  height: 7,
+                  decoration: BoxDecoration(
+                    color: AppColors.panelBorder,
+                    borderRadius: BorderRadius.circular(100),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+              Text(
+                'Editar prospecto',
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Actualiza datos y etapa del prospecto.',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: Colors.black54),
+              ),
+              const SizedBox(height: 16),
+              _InputField(
+                controller: _companyController,
+                label: 'Empresa',
+                hint: 'Ej. Hidraulica del Pacifico',
+                validator: _requiredField,
+              ),
+              const SizedBox(height: 10),
+              _InputField(
+                controller: _contactController,
+                label: 'Contacto',
+                hint: 'Nombre de contacto',
+                validator: _requiredField,
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: _InputField(
+                      controller: _phoneController,
+                      label: 'Telefono',
+                      hint: '+52 ...',
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _InputField(
+                      controller: _emailController,
+                      label: 'Correo',
+                      hint: 'contacto@empresa.com',
+                      keyboardType: TextInputType.emailAddress,
+                      validator: _emailValidator,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: _InputField(
+                      controller: _sourceController,
+                      label: 'Origen',
+                      hint: 'Referido',
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      initialValue: _selectedStatus,
+                      decoration: const InputDecoration(labelText: 'Etapa'),
+                      items: _leadStatusOptions
+                          .map((status) {
+                            return DropdownMenuItem<String>(
+                              value: status,
+                              child: Text(status),
+                            );
+                          })
+                          .toList(growable: false),
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() => _selectedStatus = value);
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: _InputField(
+                      controller: _amountController,
+                      label: 'Monto estimado',
+                      hint: '150000',
+                      keyboardType: TextInputType.number,
+                      validator: _requiredField,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: _pickDate,
+                      child: InputDecorator(
+                        decoration: const InputDecoration(
+                          labelText: 'Proxima accion',
+                        ),
+                        child: Text(
+                          DateFormat('yyyy-MM-dd').format(_nextActionDate),
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              _InputField(
+                controller: _ownerController,
+                label: 'Responsable',
+                hint: 'Nombre del vendedor',
+                validator: _requiredField,
+              ),
+              const SizedBox(height: 10),
+              _InputField(
+                controller: _notesController,
+                label: 'Notas',
+                hint: 'Comentarios clave del requerimiento',
+                maxLines: 3,
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('Cancelar'),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: FilledButton(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppColors.black,
+                        foregroundColor: AppColors.yellow,
+                      ),
+                      onPressed: _submit,
+                      child: const Text('Guardar cambios'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _InputField extends StatelessWidget {
   const _InputField({
     required this.controller,
@@ -720,6 +1124,24 @@ String? _emailValidator(String? value) {
     return 'Correo invalido';
   }
   return null;
+}
+
+const _leadStatusOptions = <String>['Nuevo', 'Contactado', 'Calificado'];
+
+UpdateLeadInput _leadToUpdateInput(Lead lead, {String? status}) {
+  return UpdateLeadInput(
+    leadId: lead.id,
+    companyName: lead.companyName,
+    contactName: lead.contactName.isEmpty ? lead.owner : lead.contactName,
+    contactPhone: lead.contactPhone,
+    contactEmail: lead.contactEmail,
+    source: lead.source,
+    status: status ?? lead.status,
+    estimatedAmount: lead.estimatedAmount,
+    nextActionDate: lead.nextActionDate,
+    owner: lead.owner,
+    notes: lead.notes,
+  );
 }
 
 double _parseAmount(String raw) {

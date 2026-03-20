@@ -685,6 +685,74 @@ class MockApiDataStore {
     return <String, dynamic>{'ok': true, 'item': item};
   }
 
+  Map<String, dynamic> updateLead({
+    required String leadId,
+    required String companyName,
+    required String contactName,
+    required String contactPhone,
+    required String contactEmail,
+    required String source,
+    required String status,
+    required double estimatedAmount,
+    required String nextActionDate,
+    required String owner,
+    required String notes,
+  }) {
+    final index = _leads.indexWhere((lead) => lead['id'] == leadId);
+    if (index == -1) {
+      return <String, dynamic>{
+        'ok': false,
+        'message': 'Prospecto no encontrado.',
+        'item': <String, dynamic>{},
+      };
+    }
+
+    if (companyName.trim().isEmpty ||
+        contactName.trim().isEmpty ||
+        owner.trim().isEmpty) {
+      return <String, dynamic>{
+        'ok': false,
+        'message': 'Empresa, contacto y responsable son obligatorios.',
+        'item': <String, dynamic>{},
+      };
+    }
+
+    final current = _leads[index];
+    final currentStatus = current['status'] as String? ?? 'Nuevo';
+    final normalizedStatus = status.trim().isEmpty
+        ? currentStatus
+        : status.trim();
+
+    final updated = <String, dynamic>{
+      ...current,
+      'company_name': companyName.trim(),
+      'contact_name': contactName.trim(),
+      'contact_phone': contactPhone.trim(),
+      'contact_email': contactEmail.trim(),
+      'source': source.trim().isEmpty ? 'Formulario' : source.trim(),
+      'status': normalizedStatus,
+      'estimated_amount': max(0, estimatedAmount),
+      'next_action_date': nextActionDate.trim().isEmpty
+          ? current['next_action_date']
+          : nextActionDate.trim(),
+      'owner': owner.trim(),
+      'notes': notes.trim(),
+    };
+    _leads[index] = updated;
+
+    _activities.insert(0, <String, dynamic>{
+      'id': 'act-${DateTime.now().millisecondsSinceEpoch}',
+      'type': 'Prospecto',
+      'summary': normalizedStatus != currentStatus
+          ? 'Prospecto ${companyName.trim()} movido de $currentStatus a $normalizedStatus.'
+          : 'Prospecto actualizado: ${companyName.trim()}.',
+      'owner': owner.trim(),
+      'created_at': DateTime.now().toUtc().toIso8601String(),
+    });
+
+    return <String, dynamic>{'ok': true, 'item': updated};
+  }
+
   Map<String, dynamic> getOpportunities({String? stage}) {
     if (stage == null || stage.isEmpty) {
       return <String, dynamic>{'items': _opportunities};

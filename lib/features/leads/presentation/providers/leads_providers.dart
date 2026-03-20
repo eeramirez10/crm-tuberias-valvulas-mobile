@@ -6,6 +6,7 @@ import '../../domain/entities/lead.dart';
 import '../../domain/repositories/leads_repository.dart';
 import '../../domain/usecases/create_lead_use_case.dart';
 import '../../domain/usecases/get_leads_use_case.dart';
+import '../../domain/usecases/update_lead_use_case.dart';
 import '../../infrastructure/datasources/leads_datasource.dart';
 import '../../infrastructure/repositories/leads_repository_impl.dart';
 
@@ -29,6 +30,11 @@ GetLeadsUseCase getLeadsUseCase(Ref ref) {
 @riverpod
 CreateLeadUseCase createLeadUseCase(Ref ref) {
   return CreateLeadUseCase(ref.watch(leadsRepositoryProvider));
+}
+
+@riverpod
+UpdateLeadUseCase updateLeadUseCase(Ref ref) {
+  return UpdateLeadUseCase(ref.watch(leadsRepositoryProvider));
 }
 
 @riverpod

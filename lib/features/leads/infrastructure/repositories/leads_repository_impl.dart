@@ -1,9 +1,11 @@
 import '../../domain/entities/create_lead_input.dart';
 import '../../domain/entities/lead.dart';
+import '../../domain/entities/update_lead_input.dart';
 import '../../domain/repositories/leads_repository.dart';
 import '../datasources/leads_datasource.dart';
 import '../dtos/create_lead_request_dto.dart';
 import '../dtos/get_leads_request_dto.dart';
+import '../dtos/update_lead_request_dto.dart';
 
 class LeadsRepositoryImpl implements LeadsRepository {
   const LeadsRepositoryImpl(this._datasource);
@@ -23,6 +25,19 @@ class LeadsRepositoryImpl implements LeadsRepository {
     );
     if (!response.ok) {
       throw StateError(response.message ?? 'No se pudo crear el prospecto.');
+    }
+    return response.toEntity();
+  }
+
+  @override
+  Future<Lead> updateLead(UpdateLeadInput input) async {
+    final response = await _datasource.updateLead(
+      UpdateLeadRequestDto.fromInput(input),
+    );
+    if (!response.ok) {
+      throw StateError(
+        response.message ?? 'No se pudo actualizar el prospecto.',
+      );
     }
     return response.toEntity();
   }

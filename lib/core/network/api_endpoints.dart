@@ -15,6 +15,7 @@ class ApiEndpoints {
   static const aiRiskSummary = '/ai/risk-summary';
   static const aiFollowUpDraft = '/ai/follow-up-draft';
 
+  static String leadById(String id) => '$leads/$id';
   static String updateOpportunityStage(String id) => '$opportunities/$id/stage';
   static String quoteById(String id) => '$quotes/$id';
   static String updateQuoteStatus(String id) => '$quotes/$id/status';
