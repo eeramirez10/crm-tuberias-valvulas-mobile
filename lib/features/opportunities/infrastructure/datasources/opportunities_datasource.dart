@@ -1,6 +1,8 @@
 import '../../../../core/network/api_endpoints.dart';
 import '../../../../core/network/http_adapter.dart';
 import '../../../../core/network/http_method.dart';
+import '../dtos/create_opportunity_request_dto.dart';
+import '../dtos/create_opportunity_response_dto.dart';
 import '../dtos/get_opportunities_request_dto.dart';
 import '../dtos/get_opportunities_response_dto.dart';
 import '../dtos/update_opportunity_stage_request_dto.dart';
@@ -21,6 +23,18 @@ class OpportunitiesDatasource {
     );
 
     return GetOpportunitiesResponseDto.fromJson(response);
+  }
+
+  Future<CreateOpportunityResponseDto> createOpportunity(
+    CreateOpportunityRequestDto request,
+  ) async {
+    final response = await _httpAdapter.request(
+      path: ApiEndpoints.opportunities,
+      method: HttpMethod.post,
+      data: request.toJson(),
+    );
+
+    return CreateOpportunityResponseDto.fromJson(response);
   }
 
   Future<UpdateOpportunityStageResponseDto> updateStage(

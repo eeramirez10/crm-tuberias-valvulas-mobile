@@ -79,6 +79,17 @@ class MockHttpAdapter implements HttpAdapter {
       );
     }
 
+    if (path == ApiEndpoints.opportunities && method == HttpMethod.post) {
+      return _dataStore.createOpportunity(
+        customerName: (data?['customer_name'] as String?) ?? '',
+        title: (data?['title'] as String?) ?? '',
+        stage: (data?['stage'] as String?) ?? '',
+        amount: (data?['amount'] as num?)?.toDouble() ?? 0,
+        probability: (data?['probability'] as num?)?.toDouble() ?? 0,
+        expectedCloseDate: (data?['expected_close_date'] as String?) ?? '',
+      );
+    }
+
     if (path.startsWith('${ApiEndpoints.opportunities}/') &&
         path.endsWith('/stage') &&
         method == HttpMethod.patch) {

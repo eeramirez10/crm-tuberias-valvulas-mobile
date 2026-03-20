@@ -66,6 +66,26 @@ final getOpportunitiesUseCaseProvider =
 // ignore: unused_element
 typedef GetOpportunitiesUseCaseRef =
     AutoDisposeProviderRef<GetOpportunitiesUseCase>;
+String _$createOpportunityUseCaseHash() =>
+    r'a09b66d4e06d1e814033a865a55d33021919b098';
+
+/// See also [createOpportunityUseCase].
+@ProviderFor(createOpportunityUseCase)
+final createOpportunityUseCaseProvider =
+    AutoDisposeProvider<CreateOpportunityUseCase>.internal(
+      createOpportunityUseCase,
+      name: r'createOpportunityUseCaseProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$createOpportunityUseCaseHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef CreateOpportunityUseCaseRef =
+    AutoDisposeProviderRef<CreateOpportunityUseCase>;
 String _$updateOpportunityStageUseCaseHash() =>
     r'a32f65b5486e3d6ef8504a268593aa3eacdd76cf';
 
@@ -87,7 +107,7 @@ final updateOpportunityStageUseCaseProvider =
 typedef UpdateOpportunityStageUseCaseRef =
     AutoDisposeProviderRef<UpdateOpportunityStageUseCase>;
 String _$opportunitiesControllerHash() =>
-    r'5170e610c3380cba29a204af5d2d07cfb2d19661';
+    r'a1e036e8198c700b5ab680ec4a1f137ad1ccb0b8';
 
 /// See also [OpportunitiesController].
 @ProviderFor(OpportunitiesController)

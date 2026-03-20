@@ -1,6 +1,8 @@
+import '../../domain/entities/create_opportunity_input.dart';
 import '../../domain/entities/opportunity.dart';
 import '../../domain/repositories/opportunities_repository.dart';
 import '../datasources/opportunities_datasource.dart';
+import '../dtos/create_opportunity_request_dto.dart';
 import '../dtos/get_opportunities_request_dto.dart';
 import '../dtos/update_opportunity_stage_request_dto.dart';
 
@@ -18,6 +20,17 @@ class OpportunitiesRepositoryImpl implements OpportunitiesRepository {
     return response.items
         .map((item) => item.toEntity())
         .toList(growable: false);
+  }
+
+  @override
+  Future<Opportunity> createOpportunity(CreateOpportunityInput input) async {
+    final response = await _datasource.createOpportunity(
+      CreateOpportunityRequestDto.fromInput(input),
+    );
+    if (!response.ok) {
+      throw StateError(response.message ?? 'No se pudo crear el deal.');
+    }
+    return response.toEntity();
   }
 
   @override

@@ -9,6 +9,7 @@ import '../../../activities/presentation/providers/activities_providers.dart';
 import '../../../dashboard/presentation/providers/dashboard_providers.dart';
 import '../../../tasks/domain/entities/create_task_input.dart';
 import '../../../tasks/presentation/providers/tasks_providers.dart';
+import '../../domain/entities/create_opportunity_input.dart';
 import '../../domain/entities/opportunity.dart';
 import '../providers/opportunities_providers.dart';
 
@@ -22,6 +23,49 @@ class PipelinePage extends ConsumerStatefulWidget {
 class _PipelinePageState extends ConsumerState<PipelinePage> {
   String? _movingOpportunityId;
   String? _creatingTaskOpportunityId;
+  bool _creatingOpportunity = false;
+
+  Future<void> _openCreateDealSheet() async {
+    if (_creatingOpportunity) {
+      return;
+    }
+
+    final payload = await showModalBottomSheet<_CreateDealSheetResult>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: AppColors.panel,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+      ),
+      builder: (_) => const _CreateDealSheet(),
+    );
+
+    if (!mounted || payload == null) {
+      return;
+    }
+
+    setState(() => _creatingOpportunity = true);
+    try {
+      await ref
+          .read(opportunitiesControllerProvider.notifier)
+          .createOpportunity(payload.input);
+
+      ref.invalidate(dashboardSummaryProvider);
+      ref.invalidate(activitiesTimelineControllerProvider);
+      if (mounted) {
+        AppToast.success(context, 'Deal creado: ${payload.input.title}.');
+      }
+    } catch (_) {
+      if (mounted) {
+        AppToast.info(context, 'No se pudo crear el deal.');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _creatingOpportunity = false);
+      }
+    }
+  }
 
   Future<void> _moveToStage({
     required Opportunity opportunity,
@@ -138,6 +182,13 @@ class _PipelinePageState extends ConsumerState<PipelinePage> {
       title: 'Deals',
       subtitle: '2 oportunidades asignadas',
       actions: <Widget>[
+        ActionSquare(
+          icon: _creatingOpportunity
+              ? Icons.hourglass_top_rounded
+              : Icons.add_rounded,
+          onTap: _creatingOpportunity ? null : _openCreateDealSheet,
+        ),
+        const SizedBox(width: 8),
         ActionSquare(icon: Icons.search_rounded, onTap: () {}),
         const SizedBox(width: 8),
         ActionSquare(icon: Icons.bar_chart_rounded, onTap: () {}),
@@ -151,6 +202,20 @@ class _PipelinePageState extends ConsumerState<PipelinePage> {
             padding: const EdgeInsets.all(16),
             children: <Widget>[
               const SizedBox(height: 8),
+              FilledButton.icon(
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.black,
+                  foregroundColor: AppColors.yellow,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                ),
+                onPressed: _creatingOpportunity ? null : _openCreateDealSheet,
+                icon: const Icon(Icons.add_rounded),
+                label: const Text('Crear deal'),
+              ),
+              const SizedBox(height: 12),
               _StageStrip(items: items),
               const SizedBox(height: 12),
               ...items.map(
@@ -377,6 +442,231 @@ class _OpportunityCard extends StatelessWidget {
   }
 }
 
+class _CreateDealSheetResult {
+  const _CreateDealSheetResult({required this.input});
+
+  final CreateOpportunityInput input;
+}
+
+class _CreateDealSheet extends StatefulWidget {
+  const _CreateDealSheet();
+
+  @override
+  State<_CreateDealSheet> createState() => _CreateDealSheetState();
+}
+
+class _CreateDealSheetState extends State<_CreateDealSheet> {
+  final _formKey = GlobalKey<FormState>();
+  final _customerController = TextEditingController();
+  final _titleController = TextEditingController();
+  final _amountController = TextEditingController();
+
+  OpportunityStage _selectedStage = OpportunityStage.requirement;
+  DateTime _expectedDate = DateTime.now().add(const Duration(days: 14));
+  double _probability = 0.5;
+
+  @override
+  void dispose() {
+    _customerController.dispose();
+    _titleController.dispose();
+    _amountController.dispose();
+    super.dispose();
+  }
+
+  void _onStageChanged(OpportunityStage stage) {
+    setState(() {
+      _selectedStage = stage;
+      _probability = _defaultProbabilityForStage(stage);
+    });
+  }
+
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _expectedDate,
+      firstDate: DateTime.now().subtract(const Duration(days: 365)),
+      lastDate: DateTime.now().add(const Duration(days: 730)),
+    );
+    if (picked != null) {
+      setState(() => _expectedDate = picked);
+    }
+  }
+
+  void _submit() {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+    final amount = _parseAmount(_amountController.text);
+    if (amount <= 0) {
+      AppToast.info(context, 'Ingresa un monto estimado mayor a 0.');
+      return;
+    }
+
+    Navigator.of(context).pop(
+      _CreateDealSheetResult(
+        input: CreateOpportunityInput(
+          customerName: _customerController.text.trim(),
+          title: _titleController.text.trim(),
+          stage: _selectedStage,
+          amount: amount,
+          probability: _probability,
+          expectedCloseDate: DateFormat('yyyy-MM-dd').format(_expectedDate),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: EdgeInsets.fromLTRB(
+          16,
+          12,
+          16,
+          MediaQuery.viewInsetsOf(context).bottom + 20,
+        ),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Center(
+                child: Container(
+                  width: 66,
+                  height: 7,
+                  decoration: BoxDecoration(
+                    color: AppColors.panelBorder,
+                    borderRadius: BorderRadius.circular(100),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+              Text(
+                'Nuevo deal',
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Registra una nueva oportunidad en el pipeline.',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: Colors.black54),
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _customerController,
+                validator: _requiredField,
+                decoration: const InputDecoration(
+                  labelText: 'Cliente',
+                  hintText: 'Empresa cliente',
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextFormField(
+                controller: _titleController,
+                validator: _requiredField,
+                decoration: const InputDecoration(
+                  labelText: 'Titulo',
+                  hintText: 'Proyecto o requerimiento',
+                ),
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: TextFormField(
+                      controller: _amountController,
+                      validator: _requiredField,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: 'Monto estimado',
+                        hintText: '120000',
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: DropdownButtonFormField<OpportunityStage>(
+                      initialValue: _selectedStage,
+                      decoration: const InputDecoration(labelText: 'Etapa'),
+                      items: _createDealStages
+                          .map(
+                            (stage) => DropdownMenuItem<OpportunityStage>(
+                              value: stage,
+                              child: Text(stage.label),
+                            ),
+                          )
+                          .toList(growable: false),
+                      onChanged: (stage) {
+                        if (stage != null) {
+                          _onStageChanged(stage);
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: _pickDate,
+                child: InputDecorator(
+                  decoration: const InputDecoration(
+                    labelText: 'Cierre estimado',
+                  ),
+                  child: Text(
+                    DateFormat('yyyy-MM-dd').format(_expectedDate),
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'Probabilidad (${(_probability * 100).toStringAsFixed(0)}%)',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              Slider(
+                value: _probability,
+                min: 0.05,
+                max: 0.95,
+                divisions: 18,
+                activeColor: AppColors.black,
+                inactiveColor: AppColors.panelBorder,
+                label: '${(_probability * 100).toStringAsFixed(0)}%',
+                onChanged: (value) {
+                  setState(() => _probability = value);
+                },
+              ),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('Cancelar'),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: FilledButton(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppColors.black,
+                        foregroundColor: AppColors.yellow,
+                      ),
+                      onPressed: _submit,
+                      child: const Text('Guardar deal'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _OpportunityTaskSheetResult {
   const _OpportunityTaskSheetResult({
     required this.title,
@@ -575,6 +865,33 @@ String? _requiredField(String? value) {
   }
   return null;
 }
+
+double _defaultProbabilityForStage(OpportunityStage stage) {
+  return switch (stage) {
+    OpportunityStage.newLead => 0.3,
+    OpportunityStage.contacted => 0.4,
+    OpportunityStage.requirement => 0.5,
+    OpportunityStage.quotation => 0.65,
+    OpportunityStage.negotiation => 0.78,
+    OpportunityStage.won => 0.95,
+    OpportunityStage.lost => 0.1,
+  };
+}
+
+double _parseAmount(String raw) {
+  final normalized = raw
+      .replaceAll(RegExp(r'[^0-9\.\,]'), '')
+      .replaceAll(',', '');
+  return double.tryParse(normalized) ?? 0;
+}
+
+const _createDealStages = <OpportunityStage>[
+  OpportunityStage.newLead,
+  OpportunityStage.contacted,
+  OpportunityStage.requirement,
+  OpportunityStage.quotation,
+  OpportunityStage.negotiation,
+];
 
 const _taskTypeOptions = <String>[
   'Seguimiento',

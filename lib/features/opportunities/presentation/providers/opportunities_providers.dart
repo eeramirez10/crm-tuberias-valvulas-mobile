@@ -2,8 +2,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/providers/core_providers.dart';
+import '../../domain/entities/create_opportunity_input.dart';
 import '../../domain/entities/opportunity.dart';
 import '../../domain/repositories/opportunities_repository.dart';
+import '../../domain/usecases/create_opportunity_use_case.dart';
 import '../../domain/usecases/get_opportunities_use_case.dart';
 import '../../domain/usecases/update_opportunity_stage_use_case.dart';
 import '../../infrastructure/datasources/opportunities_datasource.dart';
@@ -26,6 +28,11 @@ OpportunitiesRepository opportunitiesRepository(Ref ref) {
 @riverpod
 GetOpportunitiesUseCase getOpportunitiesUseCase(Ref ref) {
   return GetOpportunitiesUseCase(ref.watch(opportunitiesRepositoryProvider));
+}
+
+@riverpod
+CreateOpportunityUseCase createOpportunityUseCase(Ref ref) {
+  return CreateOpportunityUseCase(ref.watch(opportunitiesRepositoryProvider));
 }
 
 @riverpod
@@ -53,6 +60,20 @@ class OpportunitiesController extends _$OpportunitiesController {
       await ref
           .read(updateOpportunityStageUseCaseProvider)
           .call(opportunityId: opportunityId, stage: stage);
+      final refreshed = await ref.read(getOpportunitiesUseCaseProvider).call();
+      state = AsyncData(refreshed);
+    } catch (_) {
+      state = AsyncData(previous);
+      rethrow;
+    }
+  }
+
+  Future<void> createOpportunity(CreateOpportunityInput input) async {
+    final previous = state.valueOrNull ?? <Opportunity>[];
+    state = const AsyncLoading();
+
+    try {
+      await ref.read(createOpportunityUseCaseProvider).call(input);
       final refreshed = await ref.read(getOpportunitiesUseCaseProvider).call();
       state = AsyncData(refreshed);
     } catch (_) {

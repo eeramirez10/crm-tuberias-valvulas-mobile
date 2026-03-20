@@ -764,6 +764,66 @@ class MockApiDataStore {
     return <String, dynamic>{'items': filtered};
   }
 
+  Map<String, dynamic> createOpportunity({
+    required String customerName,
+    required String title,
+    required String stage,
+    required double amount,
+    required double probability,
+    required String expectedCloseDate,
+  }) {
+    if (customerName.trim().isEmpty || title.trim().isEmpty) {
+      return <String, dynamic>{
+        'ok': false,
+        'message': 'Cliente y titulo son obligatorios.',
+        'item': <String, dynamic>{},
+      };
+    }
+    if (amount <= 0) {
+      return <String, dynamic>{
+        'ok': false,
+        'message': 'El monto debe ser mayor a cero.',
+        'item': <String, dynamic>{},
+      };
+    }
+
+    final normalizedStage = stage.trim().isEmpty
+        ? OpportunityStage.requirement.code
+        : stage.trim();
+    final stageEntity = OpportunityStageX.fromCode(normalizedStage);
+    final normalizedProbability = probability <= 0
+        ? _defaultProbabilityByStage(stageEntity)
+        : probability.clamp(0.05, 0.95);
+    final normalizedDate = expectedCloseDate.trim().isEmpty
+        ? DateTime.now()
+              .add(const Duration(days: 14))
+              .toIso8601String()
+              .split('T')
+              .first
+        : expectedCloseDate.trim();
+
+    final item = <String, dynamic>{
+      'id': 'opp-${DateTime.now().microsecondsSinceEpoch}',
+      'customer_name': customerName.trim(),
+      'title': title.trim(),
+      'stage': stageEntity.code,
+      'amount': amount,
+      'probability': normalizedProbability,
+      'expected_close_date': normalizedDate,
+    };
+    _opportunities.insert(0, item);
+
+    _activities.insert(0, <String, dynamic>{
+      'id': 'act-${DateTime.now().millisecondsSinceEpoch}',
+      'type': 'Deal',
+      'summary': 'Nuevo deal creado: ${title.trim()} (${customerName.trim()}).',
+      'owner': 'Erick Ramirez',
+      'created_at': DateTime.now().toUtc().toIso8601String(),
+    });
+
+    return <String, dynamic>{'ok': true, 'item': item};
+  }
+
   Map<String, dynamic> getQuotes({String? status}) {
     if (status == null || status.trim().isEmpty) {
       return <String, dynamic>{'items': _quotes};
@@ -1439,6 +1499,18 @@ class MockApiDataStore {
       return 'Media';
     }
     return 'Baja';
+  }
+
+  double _defaultProbabilityByStage(OpportunityStage stage) {
+    return switch (stage) {
+      OpportunityStage.newLead => 0.3,
+      OpportunityStage.contacted => 0.4,
+      OpportunityStage.requirement => 0.5,
+      OpportunityStage.quotation => 0.65,
+      OpportunityStage.negotiation => 0.78,
+      OpportunityStage.won => 0.95,
+      OpportunityStage.lost => 0.1,
+    };
   }
 
   String _moneyCompact(double value) {
