@@ -4,6 +4,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../../core/providers/core_providers.dart';
 import '../../domain/entities/create_opportunity_input.dart';
 import '../../domain/entities/opportunity.dart';
+import '../../domain/entities/update_opportunity_stage_result.dart';
 import '../../domain/repositories/opportunities_repository.dart';
 import '../../domain/usecases/create_opportunity_use_case.dart';
 import '../../domain/usecases/get_opportunities_use_case.dart';
@@ -49,7 +50,7 @@ class OpportunitiesController extends _$OpportunitiesController {
     return ref.watch(getOpportunitiesUseCaseProvider).call();
   }
 
-  Future<void> moveToStage({
+  Future<UpdateOpportunityStageResult> moveToStage({
     required String opportunityId,
     required OpportunityStage stage,
   }) async {
@@ -57,11 +58,12 @@ class OpportunitiesController extends _$OpportunitiesController {
     state = const AsyncLoading();
 
     try {
-      await ref
+      final result = await ref
           .read(updateOpportunityStageUseCaseProvider)
           .call(opportunityId: opportunityId, stage: stage);
       final refreshed = await ref.read(getOpportunitiesUseCaseProvider).call();
       state = AsyncData(refreshed);
+      return result;
     } catch (_) {
       state = AsyncData(previous);
       rethrow;

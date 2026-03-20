@@ -1265,7 +1265,42 @@ class MockApiDataStore {
       ),
     };
 
-    return <String, dynamic>{'ok': true};
+    var customerCreated = false;
+    var customerName = '';
+    if (stage == OpportunityStage.won.code) {
+      customerName = (_opportunities[index]['customer_name'] as String? ?? '')
+          .trim();
+      final exists = _customers.any(
+        (customer) =>
+            ((customer['name'] as String?) ?? '').toLowerCase() ==
+            customerName.toLowerCase(),
+      );
+      if (!exists && customerName.isNotEmpty) {
+        _customers.insert(0, <String, dynamic>{
+          'id': 'cus-${DateTime.now().microsecondsSinceEpoch}',
+          'name': customerName,
+          'segment': 'Cuenta nueva',
+          'contact_name': 'Contacto por definir',
+          'contact_phone': '',
+          'city': 'Sin ciudad',
+          'credit_status': 'Revision',
+        });
+        customerCreated = true;
+        _activities.insert(0, <String, dynamic>{
+          'id': 'act-${DateTime.now().millisecondsSinceEpoch}',
+          'type': 'Cliente',
+          'summary': 'Nuevo cliente creado desde deal ganado: $customerName.',
+          'owner': 'Erick Ramirez',
+          'created_at': DateTime.now().toUtc().toIso8601String(),
+        });
+      }
+    }
+
+    return <String, dynamic>{
+      'ok': true,
+      'customer_created': customerCreated,
+      'customer_name': customerName,
+    };
   }
 
   Map<String, dynamic> getTasks({bool? completed}) {

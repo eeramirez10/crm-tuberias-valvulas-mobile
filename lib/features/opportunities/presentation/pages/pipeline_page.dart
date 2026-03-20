@@ -6,6 +6,7 @@ import '../../../../core/design_system/app_colors.dart';
 import '../../../../core/design_system/app_toast.dart';
 import '../../../../core/design_system/crm_page_shell.dart';
 import '../../../activities/presentation/providers/activities_providers.dart';
+import '../../../customers/presentation/providers/customers_providers.dart';
 import '../../../dashboard/presentation/providers/dashboard_providers.dart';
 import '../../../tasks/domain/entities/create_task_input.dart';
 import '../../../tasks/presentation/providers/tasks_providers.dart';
@@ -78,7 +79,7 @@ class _PipelinePageState extends ConsumerState<PipelinePage> {
 
     setState(() => _movingOpportunityId = opportunity.id);
     try {
-      await ref
+      final result = await ref
           .read(opportunitiesControllerProvider.notifier)
           .moveToStage(opportunityId: opportunity.id, stage: stage);
       await ref
@@ -89,8 +90,17 @@ class _PipelinePageState extends ConsumerState<PipelinePage> {
                 'Oportunidad ${opportunity.title} movida a ${stage.label}.',
           );
       ref.invalidate(dashboardSummaryProvider);
+      if (result.customerCreated) {
+        ref.invalidate(customersProvider());
+      }
       if (mounted && showSuccessToast) {
         AppToast.success(context, 'Etapa movida a ${stage.label}.');
+        if (result.customerCreated) {
+          AppToast.info(
+            context,
+            'Se creo cliente automaticamente: ${result.customerName}.',
+          );
+        }
       }
     } catch (_) {
       if (mounted) {

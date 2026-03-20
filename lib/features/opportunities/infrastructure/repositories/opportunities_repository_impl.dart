@@ -1,5 +1,6 @@
 import '../../domain/entities/create_opportunity_input.dart';
 import '../../domain/entities/opportunity.dart';
+import '../../domain/entities/update_opportunity_stage_result.dart';
 import '../../domain/repositories/opportunities_repository.dart';
 import '../datasources/opportunities_datasource.dart';
 import '../dtos/create_opportunity_request_dto.dart';
@@ -34,7 +35,7 @@ class OpportunitiesRepositoryImpl implements OpportunitiesRepository {
   }
 
   @override
-  Future<void> updateOpportunityStage({
+  Future<UpdateOpportunityStageResult> updateOpportunityStage({
     required String opportunityId,
     required OpportunityStage stage,
   }) async {
@@ -48,5 +49,6 @@ class OpportunitiesRepositoryImpl implements OpportunitiesRepository {
     if (!response.ok) {
       throw StateError(response.message ?? 'No se pudo actualizar la etapa.');
     }
+    return response.toEntity();
   }
 }

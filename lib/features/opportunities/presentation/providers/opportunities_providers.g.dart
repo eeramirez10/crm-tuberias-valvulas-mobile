@@ -107,7 +107,7 @@ final updateOpportunityStageUseCaseProvider =
 typedef UpdateOpportunityStageUseCaseRef =
     AutoDisposeProviderRef<UpdateOpportunityStageUseCase>;
 String _$opportunitiesControllerHash() =>
-    r'a1e036e8198c700b5ab680ec4a1f137ad1ccb0b8';
+    r'f37ab0b54d974a935cb3cea3d7a33a039d2c6dfc';
 
 /// See also [OpportunitiesController].
 @ProviderFor(OpportunitiesController)

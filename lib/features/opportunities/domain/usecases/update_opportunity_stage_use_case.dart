@@ -1,4 +1,5 @@
 import '../entities/opportunity.dart';
+import '../entities/update_opportunity_stage_result.dart';
 import '../repositories/opportunities_repository.dart';
 
 class UpdateOpportunityStageUseCase {
@@ -6,7 +7,7 @@ class UpdateOpportunityStageUseCase {
 
   final OpportunitiesRepository _repository;
 
-  Future<void> call({
+  Future<UpdateOpportunityStageResult> call({
     required String opportunityId,
     required OpportunityStage stage,
   }) {
