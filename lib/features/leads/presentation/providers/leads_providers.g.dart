@@ -57,6 +57,24 @@ final getLeadsUseCaseProvider = AutoDisposeProvider<GetLeadsUseCase>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef GetLeadsUseCaseRef = AutoDisposeProviderRef<GetLeadsUseCase>;
+String _$createLeadUseCaseHash() => r'687e13b961b13caef043d1de8a3ee12f3295e46b';
+
+/// See also [createLeadUseCase].
+@ProviderFor(createLeadUseCase)
+final createLeadUseCaseProvider =
+    AutoDisposeProvider<CreateLeadUseCase>.internal(
+      createLeadUseCase,
+      name: r'createLeadUseCaseProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$createLeadUseCaseHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef CreateLeadUseCaseRef = AutoDisposeProviderRef<CreateLeadUseCase>;
 String _$leadsHash() => r'e23fa120706da89e033ab6f281b998ccd8ce39b1';
 
 /// Copied from Dart SDK

@@ -39,6 +39,21 @@ class MockHttpAdapter implements HttpAdapter {
       return _dataStore.getLeads(status: queryParameters?['status'] as String?);
     }
 
+    if (path == ApiEndpoints.leads && method == HttpMethod.post) {
+      return _dataStore.createLead(
+        companyName: (data?['company_name'] as String?) ?? '',
+        contactName: (data?['contact_name'] as String?) ?? '',
+        contactPhone: (data?['contact_phone'] as String?) ?? '',
+        contactEmail: (data?['contact_email'] as String?) ?? '',
+        source: (data?['source'] as String?) ?? '',
+        status: (data?['status'] as String?) ?? '',
+        estimatedAmount: (data?['estimated_amount'] as num?)?.toDouble() ?? 0,
+        nextActionDate: (data?['next_action_date'] as String?) ?? '',
+        owner: (data?['owner'] as String?) ?? '',
+        notes: (data?['notes'] as String?) ?? '',
+      );
+    }
+
     if (path == ApiEndpoints.opportunities && method == HttpMethod.get) {
       return _dataStore.getOpportunities(
         stage: queryParameters?['stage'] as String?,

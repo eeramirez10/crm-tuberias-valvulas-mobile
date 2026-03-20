@@ -1,19 +1,17 @@
-class Lead {
-  const Lead({
-    required this.id,
+class CreateLeadInput {
+  const CreateLeadInput({
     required this.companyName,
-    this.contactName = '',
-    this.contactPhone = '',
-    this.contactEmail = '',
+    required this.contactName,
+    required this.contactPhone,
+    required this.contactEmail,
     required this.source,
     required this.status,
     required this.estimatedAmount,
     required this.nextActionDate,
     required this.owner,
-    this.notes = '',
+    required this.notes,
   });
 
-  final String id;
   final String companyName;
   final String contactName;
   final String contactPhone;

@@ -56,29 +56,41 @@ class MockApiDataStore {
         {
           'id': 'lead-001',
           'company_name': 'Planta Embotelladora Delta',
+          'contact_name': 'Rafael Ortega',
+          'contact_phone': '+52 229 210 1145',
+          'contact_email': 'rortega@delta.com.mx',
           'source': 'Referido',
           'status': 'Nuevo',
           'estimated_amount': 185000.0,
           'next_action_date': '2026-03-20',
           'owner': 'Erick Ramirez',
+          'notes': 'Requiere valvulas de acero inoxidable para proceso CIP.',
         },
         {
           'id': 'lead-002',
           'company_name': 'Hotel Marina Azul',
+          'contact_name': 'Karla Ruiz',
+          'contact_phone': '+52 229 440 9930',
+          'contact_email': 'compras@hotelmarinaazul.mx',
           'source': 'Visita',
           'status': 'Contactado',
           'estimated_amount': 52000.0,
           'next_action_date': '2026-03-19',
           'owner': 'Erick Ramirez',
+          'notes': 'Solicitan cotizacion para reemplazo de red hidraulica.',
         },
         {
           'id': 'lead-003',
           'company_name': 'Obra Periferico Sur Tramo 2',
+          'contact_name': 'Fernando Cota',
+          'contact_phone': '+52 667 390 2844',
+          'contact_email': 'f.cota@constructoraipsa.com',
           'source': 'Llamada',
           'status': 'Calificado',
           'estimated_amount': 430000.0,
           'next_action_date': '2026-03-22',
           'owner': 'Mariana Solis',
+          'notes': 'Proyecto con entrega parcial por frentes de obra.',
         },
       ],
       products: <Map<String, dynamic>>[
@@ -615,6 +627,62 @@ class MockApiDataStore {
         .where((lead) => lead['status'] == status)
         .toList(growable: false);
     return <String, dynamic>{'items': filtered};
+  }
+
+  Map<String, dynamic> createLead({
+    required String companyName,
+    required String contactName,
+    required String contactPhone,
+    required String contactEmail,
+    required String source,
+    required String status,
+    required double estimatedAmount,
+    required String nextActionDate,
+    required String owner,
+    required String notes,
+  }) {
+    if (companyName.trim().isEmpty ||
+        contactName.trim().isEmpty ||
+        owner.trim().isEmpty) {
+      return <String, dynamic>{
+        'ok': false,
+        'message': 'Empresa, contacto y responsable son obligatorios.',
+        'item': <String, dynamic>{},
+      };
+    }
+
+    final normalizedStatus = status.trim().isEmpty ? 'Nuevo' : status.trim();
+    final id = 'lead-${DateTime.now().microsecondsSinceEpoch}';
+    final item = <String, dynamic>{
+      'id': id,
+      'company_name': companyName.trim(),
+      'contact_name': contactName.trim(),
+      'contact_phone': contactPhone.trim(),
+      'contact_email': contactEmail.trim(),
+      'source': source.trim().isEmpty ? 'Formulario' : source.trim(),
+      'status': normalizedStatus,
+      'estimated_amount': max(0, estimatedAmount),
+      'next_action_date': nextActionDate.trim().isEmpty
+          ? DateTime.now()
+                .add(const Duration(days: 2))
+                .toIso8601String()
+                .split('T')
+                .first
+          : nextActionDate.trim(),
+      'owner': owner.trim(),
+      'notes': notes.trim(),
+    };
+
+    _leads.insert(0, item);
+    _activities.insert(0, <String, dynamic>{
+      'id': 'act-${DateTime.now().millisecondsSinceEpoch}',
+      'type': 'Prospecto',
+      'summary': 'Nuevo prospecto registrado: ${companyName.trim()}.',
+      'owner': owner.trim(),
+      'created_at': DateTime.now().toUtc().toIso8601String(),
+    });
+
+    return <String, dynamic>{'ok': true, 'item': item};
   }
 
   Map<String, dynamic> getOpportunities({String? stage}) {

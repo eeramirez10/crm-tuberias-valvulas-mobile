@@ -4,6 +4,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../../core/providers/core_providers.dart';
 import '../../domain/entities/lead.dart';
 import '../../domain/repositories/leads_repository.dart';
+import '../../domain/usecases/create_lead_use_case.dart';
 import '../../domain/usecases/get_leads_use_case.dart';
 import '../../infrastructure/datasources/leads_datasource.dart';
 import '../../infrastructure/repositories/leads_repository_impl.dart';
@@ -23,6 +24,11 @@ LeadsRepository leadsRepository(Ref ref) {
 @riverpod
 GetLeadsUseCase getLeadsUseCase(Ref ref) {
   return GetLeadsUseCase(ref.watch(leadsRepositoryProvider));
+}
+
+@riverpod
+CreateLeadUseCase createLeadUseCase(Ref ref) {
+  return CreateLeadUseCase(ref.watch(leadsRepositoryProvider));
 }
 
 @riverpod

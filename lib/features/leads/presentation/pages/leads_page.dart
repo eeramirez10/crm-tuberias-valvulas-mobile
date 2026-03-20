@@ -4,24 +4,95 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/design_system/app_colors.dart';
-import '../../../../core/design_system/crm_page_shell.dart';
 import '../../../../core/design_system/app_toast.dart';
+import '../../../../core/design_system/crm_page_shell.dart';
 import '../../../activities/presentation/providers/activities_providers.dart';
+import '../../../dashboard/presentation/providers/dashboard_providers.dart';
 import '../../../tasks/presentation/providers/tasks_providers.dart';
+import '../../domain/entities/create_lead_input.dart';
 import '../../domain/entities/lead.dart';
 import '../providers/leads_providers.dart';
 
-class LeadsPage extends ConsumerWidget {
+class LeadsPage extends ConsumerStatefulWidget {
   const LeadsPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<LeadsPage> createState() => _LeadsPageState();
+}
+
+class _LeadsPageState extends ConsumerState<LeadsPage> {
+  bool _creatingLead = false;
+
+  Future<void> _openCreateLeadSheet() async {
+    if (_creatingLead) {
+      return;
+    }
+
+    final payload = await showModalBottomSheet<_CreateLeadSheetResult>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: AppColors.panel,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+      ),
+      builder: (_) => const _CreateLeadSheet(),
+    );
+
+    if (!mounted || payload == null) {
+      return;
+    }
+
+    setState(() => _creatingLead = true);
+    try {
+      final lead = await ref
+          .read(createLeadUseCaseProvider)
+          .call(payload.input);
+
+      if (payload.createInitialTask) {
+        await ref
+            .read(tasksControllerProvider.notifier)
+            .createFollowUpTask(
+              title: 'Seguimiento inicial ${lead.companyName}',
+              type: 'Seguimiento',
+              dueDate: lead.nextActionDate,
+              relatedTo: lead.id,
+            );
+      }
+
+      ref.invalidate(leadsProvider());
+      ref.invalidate(dashboardSummaryProvider);
+      ref.invalidate(activitiesTimelineControllerProvider);
+
+      if (mounted) {
+        AppToast.success(context, 'Prospecto creado: ${lead.companyName}');
+      }
+    } catch (_) {
+      if (mounted) {
+        AppToast.info(context, 'No se pudo registrar el prospecto.');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _creatingLead = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final leadsState = ref.watch(leadsProvider());
 
     return CrmPageShell(
       title: 'Leads',
       subtitle: 'Leads asignados',
       actions: <Widget>[
+        ActionSquare(
+          icon: _creatingLead
+              ? Icons.hourglass_top_rounded
+              : Icons.person_add_alt_1_rounded,
+          onTap: _creatingLead ? null : _openCreateLeadSheet,
+        ),
+        const SizedBox(width: 8),
         ActionSquare(icon: Icons.search_rounded, onTap: () {}),
         const SizedBox(width: 8),
         ActionSquare(icon: Icons.bar_chart_rounded, onTap: () {}),
@@ -35,6 +106,20 @@ class LeadsPage extends ConsumerWidget {
             padding: const EdgeInsets.all(16),
             children: <Widget>[
               const SizedBox(height: 8),
+              FilledButton.icon(
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.black,
+                  foregroundColor: AppColors.yellow,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                ),
+                onPressed: _creatingLead ? null : _openCreateLeadSheet,
+                icon: const Icon(Icons.add_rounded),
+                label: const Text('Dar de alta prospecto'),
+              ),
+              const SizedBox(height: 12),
               _LeadFilters(items: items),
               const SizedBox(height: 12),
               ...items.map(
@@ -131,7 +216,9 @@ class _LeadCard extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
                         Text(
-                          lead.owner,
+                          lead.contactName.isEmpty
+                              ? lead.owner
+                              : lead.contactName,
                           style: Theme.of(context).textTheme.titleLarge,
                         ),
                         const SizedBox(height: 2),
@@ -170,11 +257,14 @@ class _LeadCard extends ConsumerWidget {
                     color: Colors.black54,
                   ),
                   const SizedBox(width: 6),
-                  Text(
-                    'Fuente: ${lead.source}',
-                    style: const TextStyle(color: Colors.black54),
+                  Expanded(
+                    child: Text(
+                      'Fuente: ${lead.source}',
+                      style: const TextStyle(color: Colors.black54),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                  const Spacer(),
+                  const SizedBox(width: 8),
                   Text(
                     amount,
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -207,12 +297,12 @@ class _LeadCard extends ConsumerWidget {
                             .logInteraction(
                               type: 'Llamada',
                               summary:
-                                  'Llamada simulada a ${lead.owner} (${lead.companyName}).',
+                                  'Llamada simulada a ${lead.contactName.isEmpty ? lead.owner : lead.contactName} (${lead.companyName}).',
                             );
                         if (context.mounted) {
                           AppToast.info(
                             context,
-                            'Simulacion: llamada a ${lead.owner}.',
+                            'Simulacion: llamada a ${lead.contactName.isEmpty ? lead.owner : lead.contactName}.',
                           );
                         }
                       },
@@ -229,12 +319,12 @@ class _LeadCard extends ConsumerWidget {
                             .logInteraction(
                               type: 'WhatsApp',
                               summary:
-                                  'WhatsApp simulado enviado a ${lead.owner} por lead ${lead.companyName}.',
+                                  'WhatsApp simulado enviado a ${lead.contactName.isEmpty ? lead.owner : lead.contactName} por lead ${lead.companyName}.',
                             );
                         if (context.mounted) {
                           AppToast.info(
                             context,
-                            'Simulacion: WhatsApp enviado a ${lead.owner}.',
+                            'Simulacion: WhatsApp enviado a ${lead.contactName.isEmpty ? lead.owner : lead.contactName}.',
                           );
                         }
                       },
@@ -304,4 +394,337 @@ class _QuickActionButton extends StatelessWidget {
       label: Text(label, overflow: TextOverflow.ellipsis),
     );
   }
+}
+
+class _CreateLeadSheetResult {
+  const _CreateLeadSheetResult({
+    required this.input,
+    required this.createInitialTask,
+  });
+
+  final CreateLeadInput input;
+  final bool createInitialTask;
+}
+
+class _CreateLeadSheet extends StatefulWidget {
+  const _CreateLeadSheet();
+
+  @override
+  State<_CreateLeadSheet> createState() => _CreateLeadSheetState();
+}
+
+class _CreateLeadSheetState extends State<_CreateLeadSheet> {
+  final _formKey = GlobalKey<FormState>();
+  final _companyController = TextEditingController();
+  final _contactController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _sourceController = TextEditingController(text: 'Referido');
+  final _amountController = TextEditingController();
+  final _ownerController = TextEditingController(text: 'Erick Ramirez');
+  final _notesController = TextEditingController();
+
+  String _selectedStatus = 'Nuevo';
+  DateTime _nextActionDate = DateTime.now().add(const Duration(days: 2));
+  bool _createInitialTask = true;
+
+  @override
+  void dispose() {
+    _companyController.dispose();
+    _contactController.dispose();
+    _phoneController.dispose();
+    _emailController.dispose();
+    _sourceController.dispose();
+    _amountController.dispose();
+    _ownerController.dispose();
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _nextActionDate,
+      firstDate: DateTime.now().subtract(const Duration(days: 365)),
+      lastDate: DateTime.now().add(const Duration(days: 730)),
+    );
+
+    if (picked != null) {
+      setState(() => _nextActionDate = picked);
+    }
+  }
+
+  void _submit() {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    final amount = _parseAmount(_amountController.text);
+    if (amount <= 0) {
+      AppToast.info(context, 'Ingresa un monto estimado mayor a 0.');
+      return;
+    }
+
+    final input = CreateLeadInput(
+      companyName: _companyController.text.trim(),
+      contactName: _contactController.text.trim(),
+      contactPhone: _phoneController.text.trim(),
+      contactEmail: _emailController.text.trim(),
+      source: _sourceController.text.trim(),
+      status: _selectedStatus,
+      estimatedAmount: amount,
+      nextActionDate: DateFormat('yyyy-MM-dd').format(_nextActionDate),
+      owner: _ownerController.text.trim(),
+      notes: _notesController.text.trim(),
+    );
+
+    Navigator.of(context).pop(
+      _CreateLeadSheetResult(
+        input: input,
+        createInitialTask: _createInitialTask,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: EdgeInsets.fromLTRB(
+          16,
+          12,
+          16,
+          MediaQuery.viewInsetsOf(context).bottom + 20,
+        ),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Center(
+                child: Container(
+                  width: 66,
+                  height: 7,
+                  decoration: BoxDecoration(
+                    color: AppColors.panelBorder,
+                    borderRadius: BorderRadius.circular(100),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+              Text(
+                'Nuevo prospecto',
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Completa los datos para darlo de alta en el pipeline.',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: Colors.black54),
+              ),
+              const SizedBox(height: 16),
+              _InputField(
+                controller: _companyController,
+                label: 'Empresa',
+                hint: 'Ej. Hidraulica del Pacifico',
+                validator: _requiredField,
+              ),
+              const SizedBox(height: 10),
+              _InputField(
+                controller: _contactController,
+                label: 'Contacto',
+                hint: 'Nombre de contacto',
+                validator: _requiredField,
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: _InputField(
+                      controller: _phoneController,
+                      label: 'Telefono',
+                      hint: '+52 ...',
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _InputField(
+                      controller: _emailController,
+                      label: 'Correo',
+                      hint: 'contacto@empresa.com',
+                      keyboardType: TextInputType.emailAddress,
+                      validator: _emailValidator,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: _InputField(
+                      controller: _sourceController,
+                      label: 'Origen',
+                      hint: 'Referido',
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      initialValue: _selectedStatus,
+                      decoration: const InputDecoration(labelText: 'Etapa'),
+                      items: const <String>['Nuevo', 'Contactado', 'Calificado']
+                          .map((status) {
+                            return DropdownMenuItem<String>(
+                              value: status,
+                              child: Text(status),
+                            );
+                          })
+                          .toList(growable: false),
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() => _selectedStatus = value);
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: _InputField(
+                      controller: _amountController,
+                      label: 'Monto estimado',
+                      hint: '150000',
+                      keyboardType: TextInputType.number,
+                      validator: _requiredField,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: _pickDate,
+                      child: InputDecorator(
+                        decoration: const InputDecoration(
+                          labelText: 'Proxima accion',
+                        ),
+                        child: Text(
+                          DateFormat('yyyy-MM-dd').format(_nextActionDate),
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              _InputField(
+                controller: _ownerController,
+                label: 'Responsable',
+                hint: 'Nombre del vendedor',
+                validator: _requiredField,
+              ),
+              const SizedBox(height: 10),
+              _InputField(
+                controller: _notesController,
+                label: 'Notas',
+                hint: 'Comentarios clave del requerimiento',
+                maxLines: 3,
+              ),
+              const SizedBox(height: 8),
+              SwitchListTile(
+                value: _createInitialTask,
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Crear tarea inicial de seguimiento'),
+                activeThumbColor: AppColors.black,
+                activeTrackColor: AppColors.yellow,
+                onChanged: (value) {
+                  setState(() => _createInitialTask = value);
+                },
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('Cancelar'),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: FilledButton(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppColors.black,
+                        foregroundColor: AppColors.yellow,
+                      ),
+                      onPressed: _submit,
+                      child: const Text('Guardar prospecto'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _InputField extends StatelessWidget {
+  const _InputField({
+    required this.controller,
+    required this.label,
+    required this.hint,
+    this.validator,
+    this.keyboardType,
+    this.maxLines = 1,
+  });
+
+  final TextEditingController controller;
+  final String label;
+  final String hint;
+  final FormFieldValidator<String>? validator;
+  final TextInputType? keyboardType;
+  final int maxLines;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextFormField(
+      controller: controller,
+      validator: validator,
+      keyboardType: keyboardType,
+      maxLines: maxLines,
+      decoration: InputDecoration(labelText: label, hintText: hint),
+    );
+  }
+}
+
+String? _requiredField(String? value) {
+  if (value == null || value.trim().isEmpty) {
+    return 'Campo obligatorio';
+  }
+  return null;
+}
+
+String? _emailValidator(String? value) {
+  if (value == null || value.trim().isEmpty) {
+    return null;
+  }
+  if (!value.contains('@')) {
+    return 'Correo invalido';
+  }
+  return null;
+}
+
+double _parseAmount(String raw) {
+  final normalized = raw
+      .replaceAll(RegExp(r'[^0-9\.\,]'), '')
+      .replaceAll(',', '');
+  return double.tryParse(normalized) ?? 0;
 }

@@ -81,7 +81,7 @@ class _LeadDetailsPageState extends ConsumerState<LeadDetailsPage> {
                               radius: 36,
                               backgroundColor: Colors.white,
                               child: Text(
-                                lead.owner.substring(0, 1),
+                                _leadDisplayName(lead).substring(0, 1),
                                 style: const TextStyle(
                                   color: AppColors.black,
                                   fontWeight: FontWeight.w800,
@@ -95,14 +95,14 @@ class _LeadDetailsPageState extends ConsumerState<LeadDetailsPage> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: <Widget>[
                                   Text(
-                                    lead.owner,
+                                    _leadDisplayName(lead),
                                     style: Theme.of(context)
                                         .textTheme
                                         .titleLarge
                                         ?.copyWith(color: AppColors.black),
                                   ),
                                   Text(
-                                    '${lead.companyName.toLowerCase().replaceAll(' ', '.')}@empresa.com',
+                                    _leadEmail(lead),
                                     style: const TextStyle(
                                       color: Colors.black87,
                                     ),
@@ -225,15 +225,13 @@ class _OverviewCard extends StatelessWidget {
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 12),
-            _Field(
-              label: 'Email',
-              value:
-                  '${lead.owner.toLowerCase().replaceAll(' ', '.')}@mail.com',
-            ),
-            _Field(label: 'Phone', value: '+52 229 123 4567'),
+            _Field(label: 'Email', value: _leadEmail(lead)),
+            _Field(label: 'Phone', value: _leadPhone(lead)),
             _Field(label: 'Company', value: lead.companyName),
             _Field(label: 'Source', value: lead.source),
             _Field(label: 'Next Action', value: lead.nextActionDate),
+            if (lead.notes.isNotEmpty)
+              _Field(label: 'Notas', value: lead.notes),
           ],
         ),
       ),
@@ -391,4 +389,23 @@ class _TabButton extends StatelessWidget {
       ),
     );
   }
+}
+
+String _leadDisplayName(Lead lead) {
+  final candidate = lead.contactName.isEmpty ? lead.owner : lead.contactName;
+  if (candidate.isEmpty) {
+    return 'Contacto';
+  }
+  return candidate;
+}
+
+String _leadEmail(Lead lead) {
+  if (lead.contactEmail.isNotEmpty) {
+    return lead.contactEmail;
+  }
+  return '${lead.companyName.toLowerCase().replaceAll(' ', '.')}@empresa.com';
+}
+
+String _leadPhone(Lead lead) {
+  return lead.contactPhone.isEmpty ? 'Sin telefono' : lead.contactPhone;
 }
