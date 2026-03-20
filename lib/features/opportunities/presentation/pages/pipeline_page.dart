@@ -2,19 +2,136 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-import '../../../../core/design_system/app_toast.dart';
 import '../../../../core/design_system/app_colors.dart';
+import '../../../../core/design_system/app_toast.dart';
 import '../../../../core/design_system/crm_page_shell.dart';
 import '../../../activities/presentation/providers/activities_providers.dart';
+import '../../../dashboard/presentation/providers/dashboard_providers.dart';
+import '../../../tasks/domain/entities/create_task_input.dart';
 import '../../../tasks/presentation/providers/tasks_providers.dart';
 import '../../domain/entities/opportunity.dart';
 import '../providers/opportunities_providers.dart';
 
-class PipelinePage extends ConsumerWidget {
+class PipelinePage extends ConsumerStatefulWidget {
   const PipelinePage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PipelinePage> createState() => _PipelinePageState();
+}
+
+class _PipelinePageState extends ConsumerState<PipelinePage> {
+  String? _movingOpportunityId;
+  String? _creatingTaskOpportunityId;
+
+  Future<void> _moveToStage({
+    required Opportunity opportunity,
+    required OpportunityStage stage,
+    required bool showSuccessToast,
+  }) async {
+    if (_movingOpportunityId != null || stage == opportunity.stage) {
+      return;
+    }
+
+    setState(() => _movingOpportunityId = opportunity.id);
+    try {
+      await ref
+          .read(opportunitiesControllerProvider.notifier)
+          .moveToStage(opportunityId: opportunity.id, stage: stage);
+      await ref
+          .read(activitiesTimelineControllerProvider.notifier)
+          .logInteraction(
+            type: 'Pipeline',
+            summary:
+                'Oportunidad ${opportunity.title} movida a ${stage.label}.',
+          );
+      ref.invalidate(dashboardSummaryProvider);
+      if (mounted && showSuccessToast) {
+        AppToast.success(context, 'Etapa movida a ${stage.label}.');
+      }
+    } catch (_) {
+      if (mounted) {
+        AppToast.info(context, 'No se pudo mover la etapa.');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _movingOpportunityId = null);
+      }
+    }
+  }
+
+  Future<void> _movePlusOne(Opportunity opportunity) async {
+    final next = _nextStage(opportunity.stage);
+    if (next == opportunity.stage) {
+      AppToast.info(context, 'La oportunidad ya esta en etapa final.');
+      return;
+    }
+
+    await _moveToStage(
+      opportunity: opportunity,
+      stage: next,
+      showSuccessToast: true,
+    );
+  }
+
+  Future<void> _openTaskSheet(Opportunity opportunity) async {
+    if (_creatingTaskOpportunityId != null) {
+      return;
+    }
+
+    final payload = await showModalBottomSheet<_OpportunityTaskSheetResult>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: AppColors.panel,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+      ),
+      builder: (_) => _OpportunityTaskSheet(opportunity: opportunity),
+    );
+
+    if (!mounted || payload == null) {
+      return;
+    }
+
+    setState(() => _creatingTaskOpportunityId = opportunity.id);
+    try {
+      await ref
+          .read(createTaskUseCaseProvider)
+          .call(
+            CreateTaskInput(
+              title: payload.title,
+              type: payload.type,
+              dueDate: payload.dueDate,
+              relatedTo: opportunity.id,
+            ),
+          );
+      await ref
+          .read(activitiesTimelineControllerProvider.notifier)
+          .logInteraction(
+            type: 'Tarea',
+            summary:
+                'Seguimiento creado para oportunidad ${opportunity.title}.',
+          );
+
+      ref.invalidate(tasksControllerProvider);
+      ref.invalidate(dashboardSummaryProvider);
+      ref.invalidate(activitiesTimelineControllerProvider);
+      if (mounted) {
+        AppToast.success(context, 'Tarea de seguimiento creada.');
+      }
+    } catch (_) {
+      if (mounted) {
+        AppToast.info(context, 'No se pudo crear la tarea.');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _creatingTaskOpportunityId = null);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final opportunitiesState = ref.watch(opportunitiesControllerProvider);
 
     return CrmPageShell(
@@ -39,7 +156,18 @@ class PipelinePage extends ConsumerWidget {
               ...items.map(
                 (item) => Padding(
                   padding: const EdgeInsets.only(bottom: 12),
-                  child: _OpportunityCard(opportunity: item),
+                  child: _OpportunityCard(
+                    opportunity: item,
+                    isMoving: _movingOpportunityId == item.id,
+                    isCreatingTask: _creatingTaskOpportunityId == item.id,
+                    onChangeStage: (selected) => _moveToStage(
+                      opportunity: item,
+                      stage: selected,
+                      showSuccessToast: true,
+                    ),
+                    onMovePlusOne: () => _movePlusOne(item),
+                    onCreateTask: () => _openTaskSheet(item),
+                  ),
                 ),
               ),
               const SizedBox(height: 18),
@@ -104,13 +232,25 @@ class _StageStrip extends StatelessWidget {
   }
 }
 
-class _OpportunityCard extends ConsumerWidget {
-  const _OpportunityCard({required this.opportunity});
+class _OpportunityCard extends StatelessWidget {
+  const _OpportunityCard({
+    required this.opportunity,
+    required this.isMoving,
+    required this.isCreatingTask,
+    required this.onChangeStage,
+    required this.onMovePlusOne,
+    required this.onCreateTask,
+  });
 
   final Opportunity opportunity;
+  final bool isMoving;
+  final bool isCreatingTask;
+  final ValueChanged<OpportunityStage> onChangeStage;
+  final VoidCallback onMovePlusOne;
+  final VoidCallback onCreateTask;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(14),
@@ -179,29 +319,14 @@ class _OpportunityCard extends ConsumerWidget {
                     ),
                   )
                   .toList(growable: false),
-              onChanged: (selected) async {
-                if (selected == null || selected == opportunity.stage) {
-                  return;
-                }
-
-                await ref
-                    .read(opportunitiesControllerProvider.notifier)
-                    .moveToStage(
-                      opportunityId: opportunity.id,
-                      stage: selected,
-                    );
-                await ref
-                    .read(activitiesTimelineControllerProvider.notifier)
-                    .logInteraction(
-                      type: 'Pipeline',
-                      summary:
-                          'Etapa cambiada manualmente a ${selected.label} para ${opportunity.title}.',
-                    );
-
-                if (context.mounted) {
-                  AppToast.success(context, 'Etapa actualizada en mock API.');
-                }
-              },
+              onChanged: isMoving
+                  ? null
+                  : (selected) {
+                      if (selected == null) {
+                        return;
+                      }
+                      onChangeStage(selected);
+                    },
             ),
             const SizedBox(height: 10),
             Wrap(
@@ -213,58 +338,28 @@ class _OpportunityCard extends ConsumerWidget {
                     side: const BorderSide(color: AppColors.black),
                     foregroundColor: AppColors.black,
                   ),
-                  onPressed: () async {
-                    final next = _nextStage(opportunity.stage);
-                    await ref
-                        .read(opportunitiesControllerProvider.notifier)
-                        .moveToStage(
-                          opportunityId: opportunity.id,
-                          stage: next,
-                        );
-                    await ref
-                        .read(activitiesTimelineControllerProvider.notifier)
-                        .logInteraction(
-                          type: 'Pipeline',
-                          summary:
-                              'Oportunidad ${opportunity.title} movida a ${next.label}.',
-                        );
-                    if (context.mounted) {
-                      AppToast.success(
-                        context,
-                        'Etapa movida a ${next.label}.',
-                      );
-                    }
-                  },
-                  icon: const Icon(Icons.trending_up_rounded, size: 18),
-                  label: const Text('Mover +1 etapa'),
+                  onPressed: isMoving ? null : onMovePlusOne,
+                  icon: Icon(
+                    isMoving
+                        ? Icons.hourglass_top_rounded
+                        : Icons.trending_up_rounded,
+                    size: 18,
+                  ),
+                  label: Text(isMoving ? 'Moviendo...' : 'Mover +1 etapa'),
                 ),
                 OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: AppColors.black),
                     foregroundColor: AppColors.black,
                   ),
-                  onPressed: () async {
-                    await ref
-                        .read(tasksControllerProvider.notifier)
-                        .createFollowUpTask(
-                          title: 'Seguimiento oportunidad ${opportunity.title}',
-                          type: 'Seguimiento',
-                          dueDate: opportunity.expectedCloseDate,
-                          relatedTo: opportunity.id,
-                        );
-                    await ref
-                        .read(activitiesTimelineControllerProvider.notifier)
-                        .logInteraction(
-                          type: 'Tarea',
-                          summary:
-                              'Seguimiento creado para oportunidad ${opportunity.title}.',
-                        );
-                    if (context.mounted) {
-                      AppToast.success(context, 'Tarea de seguimiento creada.');
-                    }
-                  },
-                  icon: const Icon(Icons.add_task_rounded, size: 18),
-                  label: const Text('Crear tarea'),
+                  onPressed: isCreatingTask ? null : onCreateTask,
+                  icon: Icon(
+                    isCreatingTask
+                        ? Icons.hourglass_top_rounded
+                        : Icons.add_task_rounded,
+                    size: 18,
+                  ),
+                  label: Text(isCreatingTask ? 'Creando...' : 'Crear tarea'),
                 ),
               ],
             ),
@@ -282,11 +377,209 @@ class _OpportunityCard extends ConsumerWidget {
   }
 }
 
+class _OpportunityTaskSheetResult {
+  const _OpportunityTaskSheetResult({
+    required this.title,
+    required this.type,
+    required this.dueDate,
+  });
+
+  final String title;
+  final String type;
+  final String dueDate;
+}
+
+class _OpportunityTaskSheet extends StatefulWidget {
+  const _OpportunityTaskSheet({required this.opportunity});
+
+  final Opportunity opportunity;
+
+  @override
+  State<_OpportunityTaskSheet> createState() => _OpportunityTaskSheetState();
+}
+
+class _OpportunityTaskSheetState extends State<_OpportunityTaskSheet> {
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _titleController;
+  String _selectedType = _taskTypeOptions.first;
+  late DateTime _selectedDueDate;
+
+  @override
+  void initState() {
+    super.initState();
+    _titleController = TextEditingController(
+      text: 'Seguimiento oportunidad ${widget.opportunity.title}',
+    );
+    _selectedDueDate =
+        DateTime.tryParse(widget.opportunity.expectedCloseDate) ??
+        DateTime.now().add(const Duration(days: 2));
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDueDate,
+      firstDate: DateTime.now().subtract(const Duration(days: 365)),
+      lastDate: DateTime.now().add(const Duration(days: 730)),
+    );
+    if (picked != null) {
+      setState(() => _selectedDueDate = picked);
+    }
+  }
+
+  void _submit() {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+    Navigator.of(context).pop(
+      _OpportunityTaskSheetResult(
+        title: _titleController.text.trim(),
+        type: _selectedType,
+        dueDate: DateFormat('yyyy-MM-dd').format(_selectedDueDate),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: EdgeInsets.fromLTRB(
+          16,
+          12,
+          16,
+          MediaQuery.viewInsetsOf(context).bottom + 20,
+        ),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Center(
+                child: Container(
+                  width: 66,
+                  height: 7,
+                  decoration: BoxDecoration(
+                    color: AppColors.panelBorder,
+                    borderRadius: BorderRadius.circular(100),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+              Text(
+                'Nueva tarea',
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Deal: ${widget.opportunity.title}',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: Colors.black54),
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _titleController,
+                validator: _requiredField,
+                decoration: const InputDecoration(
+                  labelText: 'Titulo',
+                  hintText: 'Seguimiento de propuesta',
+                ),
+              ),
+              const SizedBox(height: 10),
+              DropdownButtonFormField<String>(
+                initialValue: _selectedType,
+                decoration: const InputDecoration(labelText: 'Tipo'),
+                items: _taskTypeOptions
+                    .map((type) {
+                      return DropdownMenuItem<String>(
+                        value: type,
+                        child: Text(type),
+                      );
+                    })
+                    .toList(growable: false),
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() => _selectedType = value);
+                  }
+                },
+              ),
+              const SizedBox(height: 10),
+              InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: _pickDate,
+                child: InputDecorator(
+                  decoration: const InputDecoration(labelText: 'Fecha limite'),
+                  child: Text(
+                    DateFormat('yyyy-MM-dd').format(_selectedDueDate),
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('Cancelar'),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: FilledButton(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppColors.black,
+                        foregroundColor: AppColors.yellow,
+                      ),
+                      onPressed: _submit,
+                      child: const Text('Crear tarea'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 OpportunityStage _nextStage(OpportunityStage current) {
-  final values = OpportunityStage.values;
-  final index = values.indexOf(current);
-  if (index == -1 || index == values.length - 1) {
+  final progression = <OpportunityStage>[
+    OpportunityStage.newLead,
+    OpportunityStage.contacted,
+    OpportunityStage.requirement,
+    OpportunityStage.quotation,
+    OpportunityStage.negotiation,
+    OpportunityStage.won,
+  ];
+
+  final index = progression.indexOf(current);
+  if (index == -1 || index == progression.length - 1) {
     return current;
   }
-  return values[index + 1];
+  return progression[index + 1];
 }
+
+String? _requiredField(String? value) {
+  if (value == null || value.trim().isEmpty) {
+    return 'Campo obligatorio';
+  }
+  return null;
+}
+
+const _taskTypeOptions = <String>[
+  'Seguimiento',
+  'Llamada',
+  'Visita',
+  'Cotizacion',
+  'Correo',
+];
