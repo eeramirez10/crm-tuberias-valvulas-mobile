@@ -233,6 +233,7 @@ class MockApiDataStore {
           'amount': 220000.0,
           'probability': 0.65,
           'expected_close_date': '2026-03-29',
+          'last_movement_date': '2026-04-02',
           'industrial_sector': 'Construccion',
           'project_state': 'Veracruz',
           'project_city': 'Veracruz',
@@ -255,6 +256,7 @@ class MockApiDataStore {
           'amount': 94000.0,
           'probability': 0.75,
           'expected_close_date': '2026-03-25',
+          'last_movement_date': '2026-04-08',
           'industrial_sector': 'Energia',
           'project_state': 'Nuevo Leon',
           'project_city': 'Monterrey',
@@ -277,6 +279,7 @@ class MockApiDataStore {
           'amount': 48000.0,
           'probability': 0.4,
           'expected_close_date': '2026-04-05',
+          'last_movement_date': '2026-04-09',
           'industrial_sector': 'Hidraulica',
           'project_state': 'Puebla',
           'project_city': 'Puebla',
@@ -289,6 +292,75 @@ class MockApiDataStore {
           'valve_type': 'Check',
           'pressure_class': '300',
           'standard': 'ASTM',
+          'loss_reason': '',
+        },
+        {
+          'id': 'opp-004',
+          'customer_name': 'Proyecto Bombeo Sierra',
+          'title': 'Suministro valvulas check 6 pulgadas',
+          'stage': OpportunityStage.lost.code,
+          'amount': 165000.0,
+          'probability': 0.1,
+          'expected_close_date': '2026-03-18',
+          'last_movement_date': '2026-03-18',
+          'industrial_sector': 'Mineria',
+          'project_state': 'Sonora',
+          'project_city': 'Hermosillo',
+          'required_delivery_time': 'Inmediato',
+          'main_competitor': 'Aceros del Pacifico',
+          'material': 'Acero al Carbon',
+          'schedule': 'Sch 80',
+          'nominal_diameter': '6"',
+          'end_type': 'Bridado',
+          'valve_type': 'Check',
+          'pressure_class': '600',
+          'standard': 'API',
+          'loss_reason': 'Precio',
+        },
+        {
+          'id': 'opp-005',
+          'customer_name': 'Petroquimica del Centro',
+          'title': 'Linea de valvulas de aislamiento',
+          'stage': OpportunityStage.lost.code,
+          'amount': 280000.0,
+          'probability': 0.1,
+          'expected_close_date': '2026-03-15',
+          'last_movement_date': '2026-03-15',
+          'industrial_sector': 'Gas y Petroleo',
+          'project_state': 'Tamaulipas',
+          'project_city': 'Altamira',
+          'required_delivery_time': '2-4 semanas',
+          'main_competitor': 'Importador directo',
+          'material': 'Inoxidable',
+          'schedule': 'Sch 40',
+          'nominal_diameter': '8"',
+          'end_type': 'Bridado',
+          'valve_type': 'Compuerta',
+          'pressure_class': '300',
+          'standard': 'ANSI',
+          'loss_reason': 'Tiempo de entrega',
+        },
+        {
+          'id': 'opp-006',
+          'customer_name': 'Acueducto Occidente',
+          'title': 'Proyecto renovacion red de valvulas',
+          'stage': OpportunityStage.won.code,
+          'amount': 198000.0,
+          'probability': 0.95,
+          'expected_close_date': '2026-04-12',
+          'last_movement_date': '2026-04-09',
+          'industrial_sector': 'Hidraulica',
+          'project_state': 'Jalisco',
+          'project_city': 'Guadalajara',
+          'required_delivery_time': '2-4 semanas',
+          'main_competitor': 'Distribuidora del Norte',
+          'material': 'Acero al Carbon',
+          'schedule': 'Sch 40',
+          'nominal_diameter': '10"',
+          'end_type': 'Bridado',
+          'valve_type': 'Compuerta',
+          'pressure_class': '300',
+          'standard': 'ANSI',
           'loss_reason': '',
         },
       ],
@@ -516,15 +588,23 @@ class MockApiDataStore {
   final List<Map<String, dynamic>> _activities;
 
   Map<String, dynamic> getDashboardSummary() {
-    final pipelineValue = _opportunities.fold<double>(
+    final activeOpportunities = _opportunities
+        .where((item) {
+          final stage = (item['stage'] as String? ?? '').trim();
+          return stage != OpportunityStage.won.code &&
+              stage != OpportunityStage.lost.code;
+        })
+        .toList(growable: false);
+    final pipelineValue = activeOpportunities.fold<double>(
       0,
-      (sum, item) => sum + (item['amount'] as num).toDouble(),
+      (sum, item) => sum + ((item['amount'] as num?)?.toDouble() ?? 0),
     );
 
     final openTasks = _tasks
         .where((task) => task['completed'] as bool == false)
         .length;
     final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
     final monthQuotes = _quotes
         .where((quote) {
           final createdRaw = quote['created_at'] as String? ?? '';
@@ -603,20 +683,104 @@ class MockApiDataStore {
               order['status'] == 'Nuevo' || order['status'] == 'En surtido',
         )
         .length;
+    final wonDeals = _opportunities
+        .where((item) => item['stage'] == OpportunityStage.won.code)
+        .toList(growable: false);
+    final wonThisMonth = wonDeals.fold<double>(0, (sum, item) {
+      final movement = DateTime.tryParse(
+        item['last_movement_date'] as String? ?? '',
+      );
+      if (movement == null ||
+          movement.year != now.year ||
+          movement.month != now.month) {
+        return sum;
+      }
+      return sum + ((item['amount'] as num?)?.toDouble() ?? 0);
+    });
+    final closedDeals = _opportunities
+        .where(
+          (item) =>
+              item['stage'] == OpportunityStage.won.code ||
+              item['stage'] == OpportunityStage.lost.code,
+        )
+        .toList(growable: false);
+    final conversionRate = closedDeals.isEmpty
+        ? 0.0
+        : wonDeals.length / closedDeals.length;
+
+    final inactiveHighValueQuotes = activeOpportunities
+        .where((item) {
+          final stage = item['stage'] as String? ?? '';
+          final inQuoteStage =
+              stage == OpportunityStage.quotation.code ||
+              stage == OpportunityStage.negotiation.code;
+          if (!inQuoteStage) {
+            return false;
+          }
+          final amount = (item['amount'] as num?)?.toDouble() ?? 0;
+          if (amount < 100000) {
+            return false;
+          }
+          final movement = DateTime.tryParse(
+            item['last_movement_date'] as String? ?? '',
+          );
+          if (movement == null) {
+            return false;
+          }
+          final movementDate = DateTime(
+            movement.year,
+            movement.month,
+            movement.day,
+          );
+          final inactiveDays = today.difference(movementDate).inDays;
+          return inactiveDays >= 5;
+        })
+        .toList(growable: false);
+    final inactiveHighValueAmount = inactiveHighValueQuotes.fold<double>(
+      0,
+      (sum, item) => sum + ((item['amount'] as num?)?.toDouble() ?? 0),
+    );
+
+    final lostDeals = _opportunities
+        .where((item) => item['stage'] == OpportunityStage.lost.code)
+        .toList(growable: false);
+    var lostByPrice = 0;
+    var lostByStock = 0;
+    var lostByDelivery = 0;
+    var lostByTechnical = 0;
+    for (final item in lostDeals) {
+      final reason = (item['loss_reason'] as String? ?? '').toLowerCase();
+      if (reason.contains('precio')) {
+        lostByPrice += 1;
+      } else if (reason.contains('stock') || reason.contains('inventario')) {
+        lostByStock += 1;
+      } else if (reason.contains('entrega') || reason.contains('tiempo')) {
+        lostByDelivery += 1;
+      } else {
+        lostByTechnical += 1;
+      }
+    }
 
     return <String, dynamic>{
       'total_customers': _customers.length,
       'active_leads': _leads.length,
       'pipeline_value': pipelineValue,
       'open_tasks': openTasks,
-      'won_this_month': 312000.0,
-      'conversion_rate': 0.31,
+      'won_this_month': wonThisMonth,
+      'conversion_rate': conversionRate,
       'quotes_this_month': quotesThisMonth,
       'quotes_approval_rate': approvalRate,
       'quotes_approved_amount': approvedAmount,
       'orders_this_month': monthOrders.length,
       'orders_on_time_rate': onTimeRate,
       'orders_backlog': ordersBacklog,
+      'high_value_inactive_quotes_count': inactiveHighValueQuotes.length,
+      'high_value_inactive_quotes_amount': inactiveHighValueAmount,
+      'lost_deals_total': lostDeals.length,
+      'lost_deals_by_price': lostByPrice,
+      'lost_deals_by_stock': lostByStock,
+      'lost_deals_by_delivery': lostByDelivery,
+      'lost_deals_by_technical': lostByTechnical,
       'top_quoted_products': topProducts
           .take(3)
           .map(
@@ -941,6 +1105,7 @@ class MockApiDataStore {
       'amount': amount,
       'probability': normalizedProbability,
       'expected_close_date': normalizedDate,
+      'last_movement_date': DateTime.now().toIso8601String().split('T').first,
       'industrial_sector': industrialSector.trim(),
       'project_state': projectState.trim(),
       'project_city': projectCity.trim(),
@@ -1407,6 +1572,7 @@ class MockApiDataStore {
         0.95,
         (_opportunities[index]['probability'] as num) + 0.05,
       ),
+      'last_movement_date': DateTime.now().toIso8601String().split('T').first,
     };
 
     var customerCreated = false;

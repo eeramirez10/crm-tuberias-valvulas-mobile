@@ -50,6 +50,7 @@ class Opportunity {
     required this.amount,
     required this.probability,
     required this.expectedCloseDate,
+    this.lastMovementDate = '',
     this.industrialSector = '',
     this.projectState = '',
     this.projectCity = '',
@@ -72,6 +73,7 @@ class Opportunity {
   final double amount;
   final double probability;
   final String expectedCloseDate;
+  final String lastMovementDate;
   final String industrialSector;
   final String projectState;
   final String projectCity;

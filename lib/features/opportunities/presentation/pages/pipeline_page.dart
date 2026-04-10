@@ -198,10 +198,19 @@ class _PipelinePageState extends ConsumerState<PipelinePage> {
   @override
   Widget build(BuildContext context) {
     final opportunitiesState = ref.watch(opportunitiesControllerProvider);
+    final activeCount =
+        opportunitiesState.valueOrNull
+            ?.where(
+              (item) =>
+                  item.stage != OpportunityStage.won &&
+                  item.stage != OpportunityStage.lost,
+            )
+            .length ??
+        0;
 
     return CrmPageShell(
       title: 'Deals',
-      subtitle: '2 oportunidades asignadas',
+      subtitle: '$activeCount oportunidades activas',
       actions: <Widget>[
         ActionSquare(
           icon: _creatingOpportunity
@@ -215,53 +224,73 @@ class _PipelinePageState extends ConsumerState<PipelinePage> {
         ActionSquare(icon: Icons.bar_chart_rounded, onTap: () {}),
       ],
       child: opportunitiesState.when(
-        data: (items) => RefreshIndicator(
-          onRefresh: () async {
-            ref.invalidate(opportunitiesControllerProvider);
-          },
-          child: ListView(
-            padding: const EdgeInsets.all(16),
-            children: <Widget>[
-              const SizedBox(height: 8),
-              FilledButton.icon(
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.black,
-                  foregroundColor: AppColors.yellow,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
+        data: (items) {
+          final activeItems = items
+              .where(
+                (item) =>
+                    item.stage != OpportunityStage.won &&
+                    item.stage != OpportunityStage.lost,
+              )
+              .toList(growable: false);
+          return RefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(opportunitiesControllerProvider);
+            },
+            child: ListView(
+              padding: const EdgeInsets.all(16),
+              children: <Widget>[
+                const SizedBox(height: 8),
+                FilledButton.icon(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.black,
+                    foregroundColor: AppColors.yellow,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                   ),
+                  onPressed: _creatingOpportunity ? null : _openCreateDealSheet,
+                  icon: const Icon(Icons.add_rounded),
+                  label: const Text('Crear deal'),
                 ),
-                onPressed: _creatingOpportunity ? null : _openCreateDealSheet,
-                icon: const Icon(Icons.add_rounded),
-                label: const Text('Crear deal'),
-              ),
-              const SizedBox(height: 12),
-              CardApp(child: _StageStrip(items: items)),
-              const SizedBox(height: 12),
-              ...items.map(
-                (item) => Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: CardApp(
-                    child: _OpportunityCard(
-                      opportunity: item,
-                      isMoving: _movingOpportunityId == item.id,
-                      isCreatingTask: _creatingTaskOpportunityId == item.id,
-                      onChangeStage: (selected) => _moveToStage(
+                const SizedBox(height: 12),
+                CardApp(child: _StageStrip(items: activeItems)),
+                const SizedBox(height: 12),
+                CardApp(child: _PipelineInactivityAlert(items: activeItems)),
+                const SizedBox(height: 12),
+                ...activeItems.map(
+                  (item) => Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: CardApp(
+                      child: _OpportunityCard(
                         opportunity: item,
-                        stage: selected,
-                        showSuccessToast: true,
+                        isMoving: _movingOpportunityId == item.id,
+                        isCreatingTask: _creatingTaskOpportunityId == item.id,
+                        onChangeStage: (selected) => _moveToStage(
+                          opportunity: item,
+                          stage: selected,
+                          showSuccessToast: true,
+                        ),
+                        onMovePlusOne: () => _movePlusOne(item),
+                        onCreateTask: () => _openTaskSheet(item),
                       ),
-                      onMovePlusOne: () => _movePlusOne(item),
-                      onCreateTask: () => _openTaskSheet(item),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 18),
-            ],
-          ),
-        ),
+                if (activeItems.isEmpty)
+                  const CardApp(
+                    child: Padding(
+                      padding: EdgeInsets.all(8),
+                      child: Text(
+                        'No hay oportunidades activas en el pipeline.',
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: 18),
+              ],
+            ),
+          );
+        },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) =>
             Center(child: Text('Error cargando pipeline: $error')),
@@ -332,6 +361,13 @@ class _OpportunityCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final inactiveDays = _daysSinceDate(opportunity.lastMovementDate);
+    final hasInactivityAlert =
+        inactiveDays >= 5 &&
+        opportunity.amount >= 100000 &&
+        (opportunity.stage == OpportunityStage.quotation ||
+            opportunity.stage == OpportunityStage.negotiation);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
@@ -365,6 +401,40 @@ class _OpportunityCard extends StatelessWidget {
                 fontSize: 18,
               ),
             ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: <Widget>[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: hasInactivityAlert
+                    ? Colors.red.shade100
+                    : Colors.grey.shade200,
+                borderRadius: BorderRadius.circular(100),
+              ),
+              child: Text(
+                'Sin movimiento: ${inactiveDays < 0 ? 0 : inactiveDays}d',
+                style: TextStyle(
+                  color: hasInactivityAlert
+                      ? Colors.red.shade900
+                      : Colors.black54,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 11,
+                ),
+              ),
+            ),
+            if (hasInactivityAlert) ...<Widget>[
+              const SizedBox(width: 8),
+              Text(
+                'Requiere seguimiento',
+                style: TextStyle(
+                  color: Colors.red.shade700,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
           ],
         ),
         const SizedBox(height: 10),
@@ -448,6 +518,71 @@ class _OpportunityCard extends StatelessWidget {
           style: Theme.of(
             context,
           ).textTheme.bodyMedium?.copyWith(color: Colors.black54),
+        ),
+      ],
+    );
+  }
+}
+
+class _PipelineInactivityAlert extends StatelessWidget {
+  const _PipelineInactivityAlert({required this.items});
+
+  final List<Opportunity> items;
+
+  @override
+  Widget build(BuildContext context) {
+    final flagged = items
+        .where(
+          (item) =>
+              item.amount >= 100000 &&
+              (item.stage == OpportunityStage.quotation ||
+                  item.stage == OpportunityStage.negotiation) &&
+              _daysSinceDate(item.lastMovementDate) >= 5,
+        )
+        .toList(growable: false);
+    final totalAmount = flagged.fold<double>(
+      0,
+      (sum, item) => sum + item.amount,
+    );
+
+    if (flagged.isEmpty) {
+      return Row(
+        children: const <Widget>[
+          Icon(Icons.check_circle_rounded, color: Colors.green),
+          SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Sin alertas de inactividad en cotizaciones de alto valor.',
+            ),
+          ),
+        ],
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Row(
+          children: <Widget>[
+            Icon(Icons.warning_amber_rounded, color: Colors.red.shade700),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Alertas de inactividad: ${flagged.length}',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: Colors.red.shade800,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Monto en riesgo: ${_money(totalAmount)}',
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: Colors.black87),
         ),
       ],
     );
@@ -1276,6 +1411,21 @@ double _parseAmount(String raw) {
       .replaceAll(RegExp(r'[^0-9\.\,]'), '')
       .replaceAll(',', '');
   return double.tryParse(normalized) ?? 0;
+}
+
+int _daysSinceDate(String rawDate) {
+  final parsed = DateTime.tryParse(rawDate);
+  if (parsed == null) {
+    return 0;
+  }
+  final now = DateTime.now();
+  final today = DateTime(now.year, now.month, now.day);
+  final date = DateTime(parsed.year, parsed.month, parsed.day);
+  return today.difference(date).inDays;
+}
+
+String _money(double value) {
+  return NumberFormat.currency(locale: 'es_MX', symbol: '\$').format(value);
 }
 
 const _createDealStages = <OpportunityStage>[

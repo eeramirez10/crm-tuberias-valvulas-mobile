@@ -118,6 +118,31 @@ class DashboardPage extends ConsumerWidget {
             summaryState.when(
               data: (summary) => CardApp(
                 child: _SectionCard(
+                  title: 'Alertas comerciales',
+                  child: _CommercialAlertsRow(summary: summary),
+                ),
+              ),
+              loading: () => const _LoadingCard(height: 100),
+              error: (_, _) =>
+                  const _ErrorCard(message: 'No se pudieron cargar alertas.'),
+            ),
+            const SizedBox(height: 12),
+            summaryState.when(
+              data: (summary) => CardApp(
+                child: _SectionCard(
+                  title: 'Lost deals por motivo',
+                  child: _LostDealsReasons(summary: summary),
+                ),
+              ),
+              loading: () => const _LoadingCard(height: 120),
+              error: (_, _) => const _ErrorCard(
+                message: 'No se pudieron cargar lost deals.',
+              ),
+            ),
+            const SizedBox(height: 12),
+            summaryState.when(
+              data: (summary) => CardApp(
+                child: _SectionCard(
                   title: 'Top productos cotizados',
                   child: _TopProductsList(items: summary.topQuotedProducts),
                 ),
@@ -210,7 +235,9 @@ class DashboardPage extends ConsumerWidget {
                           (activity) => _DataLine(
                             title: activity.summary,
                             subtitle: '${activity.type} • ${activity.owner}',
-                            trailing: DateFormat.Hm().format(activity.createdAt),
+                            trailing: DateFormat.Hm().format(
+                              activity.createdAt,
+                            ),
                           ),
                         )
                         .toList(growable: false),
@@ -302,6 +329,111 @@ class _OrdersKpiRow extends StatelessWidget {
             background: Colors.orange.shade100,
             foreground: Colors.orange.shade900,
           ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CommercialAlertsRow extends StatelessWidget {
+  const _CommercialAlertsRow({required this.summary});
+
+  final DashboardSummary summary;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasAlerts = summary.highValueInactiveQuotesCount > 0;
+    return Row(
+      children: <Widget>[
+        Expanded(
+          child: _RiskPill(
+            label: 'Cotizaciones sin mover >5d',
+            value: summary.highValueInactiveQuotesCount,
+            background: hasAlerts ? Colors.red.shade100 : Colors.green.shade100,
+            foreground: hasAlerts ? Colors.red.shade900 : Colors.green.shade900,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _KpiAmountPill(
+            label: 'Monto en riesgo',
+            value: _currency(summary.highValueInactiveQuotesAmount),
+            background: hasAlerts
+                ? Colors.orange.shade100
+                : Colors.lightBlue.shade100,
+            foreground: hasAlerts
+                ? Colors.orange.shade900
+                : Colors.blue.shade900,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _LostDealsReasons extends StatelessWidget {
+  const _LostDealsReasons({required this.summary});
+
+  final DashboardSummary summary;
+
+  @override
+  Widget build(BuildContext context) {
+    if (summary.lostDealsTotal == 0) {
+      return const Text('Sin deals perdidos registrados.');
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Text(
+          'Total deals perdidos: ${summary.lostDealsTotal}',
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: <Widget>[
+            Expanded(
+              child: _RiskPill(
+                label: 'Precio',
+                value: summary.lostDealsByPrice,
+                background: Colors.orange.shade100,
+                foreground: Colors.orange.shade900,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _RiskPill(
+                label: 'Stock',
+                value: summary.lostDealsByStock,
+                background: Colors.blue.shade100,
+                foreground: Colors.blue.shade900,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: <Widget>[
+            Expanded(
+              child: _RiskPill(
+                label: 'Entrega',
+                value: summary.lostDealsByDelivery,
+                background: Colors.purple.shade100,
+                foreground: Colors.purple.shade900,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _RiskPill(
+                label: 'Tecnica',
+                value: summary.lostDealsByTechnical,
+                background: Colors.teal.shade100,
+                foreground: Colors.teal.shade900,
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -549,9 +681,9 @@ class _SummaryGrid extends StatelessWidget {
                   ),
                 ],
               ),
-          
+
               Spacer(),
-          
+
               Text(
                 item.title,
                 style: Theme.of(

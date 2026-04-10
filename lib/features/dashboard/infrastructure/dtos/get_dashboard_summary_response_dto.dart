@@ -39,6 +39,13 @@ class GetDashboardSummaryResponseDto {
     required this.ordersOnTimeRate,
     required this.ordersBacklog,
     required this.topQuotedProducts,
+    required this.highValueInactiveQuotesCount,
+    required this.highValueInactiveQuotesAmount,
+    required this.lostDealsTotal,
+    required this.lostDealsByPrice,
+    required this.lostDealsByStock,
+    required this.lostDealsByDelivery,
+    required this.lostDealsByTechnical,
   });
 
   final int totalCustomers;
@@ -54,6 +61,13 @@ class GetDashboardSummaryResponseDto {
   final double ordersOnTimeRate;
   final int ordersBacklog;
   final List<DashboardTopQuotedProductDto> topQuotedProducts;
+  final int highValueInactiveQuotesCount;
+  final double highValueInactiveQuotesAmount;
+  final int lostDealsTotal;
+  final int lostDealsByPrice;
+  final int lostDealsByStock;
+  final int lostDealsByDelivery;
+  final int lostDealsByTechnical;
 
   factory GetDashboardSummaryResponseDto.fromJson(Map<String, dynamic> json) {
     return GetDashboardSummaryResponseDto(
@@ -71,6 +85,17 @@ class GetDashboardSummaryResponseDto {
       ordersThisMonth: (json['orders_this_month'] as num?)?.toInt() ?? 0,
       ordersOnTimeRate: (json['orders_on_time_rate'] as num?)?.toDouble() ?? 0,
       ordersBacklog: (json['orders_backlog'] as num?)?.toInt() ?? 0,
+      highValueInactiveQuotesCount:
+          (json['high_value_inactive_quotes_count'] as num?)?.toInt() ?? 0,
+      highValueInactiveQuotesAmount:
+          (json['high_value_inactive_quotes_amount'] as num?)?.toDouble() ?? 0,
+      lostDealsTotal: (json['lost_deals_total'] as num?)?.toInt() ?? 0,
+      lostDealsByPrice: (json['lost_deals_by_price'] as num?)?.toInt() ?? 0,
+      lostDealsByStock: (json['lost_deals_by_stock'] as num?)?.toInt() ?? 0,
+      lostDealsByDelivery:
+          (json['lost_deals_by_delivery'] as num?)?.toInt() ?? 0,
+      lostDealsByTechnical:
+          (json['lost_deals_by_technical'] as num?)?.toInt() ?? 0,
       topQuotedProducts:
           (json['top_quoted_products'] as List<dynamic>? ?? <dynamic>[])
               .whereType<Map<String, dynamic>>()
@@ -96,6 +121,13 @@ class GetDashboardSummaryResponseDto {
       topQuotedProducts: topQuotedProducts
           .map((item) => item.toEntity())
           .toList(growable: false),
+      highValueInactiveQuotesCount: highValueInactiveQuotesCount,
+      highValueInactiveQuotesAmount: highValueInactiveQuotesAmount,
+      lostDealsTotal: lostDealsTotal,
+      lostDealsByPrice: lostDealsByPrice,
+      lostDealsByStock: lostDealsByStock,
+      lostDealsByDelivery: lostDealsByDelivery,
+      lostDealsByTechnical: lostDealsByTechnical,
     );
   }
 }

@@ -9,6 +9,7 @@ class OpportunityItemDto {
     required this.amount,
     required this.probability,
     required this.expectedCloseDate,
+    required this.lastMovementDate,
     required this.industrialSector,
     required this.projectState,
     required this.projectCity,
@@ -31,6 +32,7 @@ class OpportunityItemDto {
   final double amount;
   final double probability;
   final String expectedCloseDate;
+  final String lastMovementDate;
   final String industrialSector;
   final String projectState;
   final String projectCity;
@@ -54,6 +56,7 @@ class OpportunityItemDto {
       amount: (json['amount'] as num?)?.toDouble() ?? 0,
       probability: (json['probability'] as num?)?.toDouble() ?? 0,
       expectedCloseDate: json['expected_close_date'] as String? ?? '',
+      lastMovementDate: json['last_movement_date'] as String? ?? '',
       industrialSector: json['industrial_sector'] as String? ?? '',
       projectState: json['project_state'] as String? ?? '',
       projectCity: json['project_city'] as String? ?? '',
@@ -79,6 +82,7 @@ class OpportunityItemDto {
       amount: amount,
       probability: probability,
       expectedCloseDate: expectedCloseDate,
+      lastMovementDate: lastMovementDate,
       industrialSector: industrialSector,
       projectState: projectState,
       projectCity: projectCity,

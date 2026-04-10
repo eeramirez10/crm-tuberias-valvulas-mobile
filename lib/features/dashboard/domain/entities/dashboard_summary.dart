@@ -23,6 +23,13 @@ class DashboardSummary {
     required this.ordersOnTimeRate,
     required this.ordersBacklog,
     required this.topQuotedProducts,
+    required this.highValueInactiveQuotesCount,
+    required this.highValueInactiveQuotesAmount,
+    required this.lostDealsTotal,
+    required this.lostDealsByPrice,
+    required this.lostDealsByStock,
+    required this.lostDealsByDelivery,
+    required this.lostDealsByTechnical,
   });
 
   final int totalCustomers;
@@ -38,4 +45,11 @@ class DashboardSummary {
   final double ordersOnTimeRate;
   final int ordersBacklog;
   final List<DashboardTopQuotedProduct> topQuotedProducts;
+  final int highValueInactiveQuotesCount;
+  final double highValueInactiveQuotesAmount;
+  final int lostDealsTotal;
+  final int lostDealsByPrice;
+  final int lostDealsByStock;
+  final int lostDealsByDelivery;
+  final int lostDealsByTechnical;
 }
