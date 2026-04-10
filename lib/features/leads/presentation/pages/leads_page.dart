@@ -726,6 +726,7 @@ class _CreateLeadSheetState extends State<_CreateLeadSheet> {
                 children: <Widget>[
                   Expanded(
                     child: DropdownButtonFormField<String>(
+                      isExpanded: true,
                       initialValue: _selectedIndustrialSector,
                       decoration: const InputDecoration(
                         labelText: 'Giro industrial',
@@ -748,6 +749,7 @@ class _CreateLeadSheetState extends State<_CreateLeadSheet> {
                   const SizedBox(width: 10),
                   Expanded(
                     child: DropdownButtonFormField<String>(
+                      isExpanded: true,
                       initialValue: _selectedCreditStatus,
                       decoration: const InputDecoration(
                         labelText: 'Estatus credito',
@@ -770,64 +772,77 @@ class _CreateLeadSheetState extends State<_CreateLeadSheet> {
                 ],
               ),
               const SizedBox(height: 10),
-              Row(
-                children: <Widget>[
-                  Expanded(
-                    child: DropdownButtonFormField<String>(
-                      initialValue: _selectedProjectState,
-                      decoration: const InputDecoration(
-                        labelText: 'Estado proyecto',
-                      ),
-                      items: _projectStateOptions
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final cityItems =
+                      (_projectCitiesByState[_selectedProjectState] ??
+                              const <String>[])
                           .map(
                             (value) => DropdownMenuItem<String>(
                               value: value,
                               child: Text(value),
                             ),
                           )
-                          .toList(growable: false),
-                      onChanged: (value) {
-                        if (value != null) {
-                          final cities = _projectCitiesByState[value]!;
-                          setState(() {
-                            _selectedProjectState = value;
-                            _selectedProjectCity = cities.first;
-                          });
-                        }
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: DropdownButtonFormField<String>(
-                      initialValue: _selectedProjectCity,
-                      decoration: const InputDecoration(
-                        labelText: 'Ciudad proyecto',
-                      ),
-                      items:
-                          (_projectCitiesByState[_selectedProjectState] ??
-                                  const <String>[])
-                              .map(
-                                (value) => DropdownMenuItem<String>(
-                                  value: value,
-                                  child: Text(value),
-                                ),
-                              )
-                              .toList(growable: false),
-                      onChanged: (value) {
-                        if (value != null) {
-                          setState(() => _selectedProjectCity = value);
-                        }
-                      },
-                    ),
-                  ),
-                ],
+                          .toList(growable: false);
+                  final stateField = DropdownButtonFormField<String>(
+                    isExpanded: true,
+                    initialValue: _selectedProjectState,
+                    decoration: const InputDecoration(labelText: 'Estado'),
+                    items: _projectStateOptions
+                        .map(
+                          (value) => DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          ),
+                        )
+                        .toList(growable: false),
+                    onChanged: (value) {
+                      if (value != null) {
+                        final cities = _projectCitiesByState[value]!;
+                        setState(() {
+                          _selectedProjectState = value;
+                          _selectedProjectCity = cities.first;
+                        });
+                      }
+                    },
+                  );
+                  final cityField = DropdownButtonFormField<String>(
+                    isExpanded: true,
+                    initialValue: _selectedProjectCity,
+                    decoration: const InputDecoration(labelText: 'Ciudad'),
+                    items: cityItems,
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() => _selectedProjectCity = value);
+                      }
+                    },
+                  );
+
+                  if (constraints.maxWidth < 420) {
+                    return Column(
+                      children: <Widget>[
+                        stateField,
+                        const SizedBox(height: 10),
+                        cityField,
+                      ],
+                    );
+                  }
+
+                  return Row(
+                    children: <Widget>[
+                      Expanded(child: stateField),
+                      const SizedBox(width: 10),
+                      Expanded(child: cityField),
+                    ],
+                  );
+                },
               ),
               const SizedBox(height: 10),
               Row(
                 children: <Widget>[
                   Expanded(
                     child: DropdownButtonFormField<String>(
+                      isExpanded: true,
                       initialValue: _selectedDeliveryTime,
                       decoration: const InputDecoration(
                         labelText: 'Tiempo entrega',
@@ -884,6 +899,7 @@ class _CreateLeadSheetState extends State<_CreateLeadSheet> {
                 children: <Widget>[
                   Expanded(
                     child: DropdownButtonFormField<String>(
+                      isExpanded: true,
                       initialValue: _selectedSource,
                       decoration: const InputDecoration(labelText: 'Origen'),
                       items: _leadSourceOptions
@@ -904,6 +920,7 @@ class _CreateLeadSheetState extends State<_CreateLeadSheet> {
                   const SizedBox(width: 10),
                   Expanded(
                     child: DropdownButtonFormField<String>(
+                      isExpanded: true,
                       initialValue: _selectedStatus,
                       decoration: const InputDecoration(labelText: 'Etapa'),
                       items: _leadStatusOptions
@@ -1303,6 +1320,7 @@ class _UpdateLeadSheetState extends State<_UpdateLeadSheet> {
                   const SizedBox(width: 10),
                   Expanded(
                     child: DropdownButtonFormField<String>(
+                      isExpanded: true,
                       initialValue: _selectedStatus,
                       decoration: const InputDecoration(labelText: 'Etapa'),
                       items: _leadStatusOptions
@@ -1511,6 +1529,7 @@ class _LeadTaskSheetState extends State<_LeadTaskSheet> {
               ),
               const SizedBox(height: 10),
               DropdownButtonFormField<String>(
+                isExpanded: true,
                 initialValue: _selectedType,
                 decoration: const InputDecoration(labelText: 'Tipo'),
                 items: _taskTypeOptions
