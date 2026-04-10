@@ -578,24 +578,31 @@ class _CreateLeadSheetState extends State<_CreateLeadSheet> {
   final _contactController = TextEditingController();
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
-  final _industrialSectorController = TextEditingController(
-    text: 'Construccion',
-  );
-  final _creditStatusController = TextEditingController(text: 'Activo');
-  final _projectStateController = TextEditingController();
-  final _projectCityController = TextEditingController();
-  final _requiredDeliveryTimeController = TextEditingController(
-    text: '2-4 semanas',
-  );
   final _mainCompetitorController = TextEditingController();
-  final _sourceController = TextEditingController(text: 'Referido');
   final _amountController = TextEditingController();
   final _ownerController = TextEditingController(text: 'Erick Ramirez');
   final _notesController = TextEditingController();
 
+  late String _selectedIndustrialSector;
+  late String _selectedCreditStatus;
+  late String _selectedProjectState;
+  late String _selectedProjectCity;
+  late String _selectedDeliveryTime;
+  late String _selectedSource;
   String _selectedStatus = 'Nuevo';
   DateTime _nextActionDate = DateTime.now().add(const Duration(days: 2));
   bool _createInitialTask = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedIndustrialSector = _industrialSectorOptions.first;
+    _selectedCreditStatus = _creditStatusOptions.first;
+    _selectedProjectState = _projectStateOptions.first;
+    _selectedProjectCity = _projectCitiesByState[_selectedProjectState]!.first;
+    _selectedDeliveryTime = _deliveryTimeOptions[2];
+    _selectedSource = _leadSourceOptions.first;
+  }
 
   @override
   void dispose() {
@@ -603,13 +610,7 @@ class _CreateLeadSheetState extends State<_CreateLeadSheet> {
     _contactController.dispose();
     _phoneController.dispose();
     _emailController.dispose();
-    _industrialSectorController.dispose();
-    _creditStatusController.dispose();
-    _projectStateController.dispose();
-    _projectCityController.dispose();
-    _requiredDeliveryTimeController.dispose();
     _mainCompetitorController.dispose();
-    _sourceController.dispose();
     _amountController.dispose();
     _ownerController.dispose();
     _notesController.dispose();
@@ -645,15 +646,15 @@ class _CreateLeadSheetState extends State<_CreateLeadSheet> {
       contactName: _contactController.text.trim(),
       contactPhone: _phoneController.text.trim(),
       contactEmail: _emailController.text.trim(),
-      industrialSector: _industrialSectorController.text.trim(),
-      creditStatus: _creditStatusController.text.trim(),
-      projectState: _projectStateController.text.trim(),
-      projectCity: _projectCityController.text.trim(),
+      industrialSector: _selectedIndustrialSector,
+      creditStatus: _selectedCreditStatus,
+      projectState: _selectedProjectState,
+      projectCity: _selectedProjectCity,
       projectLatitude: null,
       projectLongitude: null,
-      requiredDeliveryTime: _requiredDeliveryTimeController.text.trim(),
+      requiredDeliveryTime: _selectedDeliveryTime,
       mainCompetitor: _mainCompetitorController.text.trim(),
-      source: _sourceController.text.trim(),
+      source: _selectedSource,
       status: _selectedStatus,
       estimatedAmount: amount,
       nextActionDate: DateFormat('yyyy-MM-dd').format(_nextActionDate),
@@ -724,18 +725,46 @@ class _CreateLeadSheetState extends State<_CreateLeadSheet> {
               Row(
                 children: <Widget>[
                   Expanded(
-                    child: _InputField(
-                      controller: _industrialSectorController,
-                      label: 'Giro industrial',
-                      hint: 'Mineria, Energia, Construccion...',
+                    child: DropdownButtonFormField<String>(
+                      initialValue: _selectedIndustrialSector,
+                      decoration: const InputDecoration(
+                        labelText: 'Giro industrial',
+                      ),
+                      items: _industrialSectorOptions
+                          .map(
+                            (value) => DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            ),
+                          )
+                          .toList(growable: false),
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() => _selectedIndustrialSector = value);
+                        }
+                      },
                     ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: _InputField(
-                      controller: _creditStatusController,
-                      label: 'Estatus credito',
-                      hint: 'Activo / Suspendido / En Tramite',
+                    child: DropdownButtonFormField<String>(
+                      initialValue: _selectedCreditStatus,
+                      decoration: const InputDecoration(
+                        labelText: 'Estatus credito',
+                      ),
+                      items: _creditStatusOptions
+                          .map(
+                            (value) => DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            ),
+                          )
+                          .toList(growable: false),
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() => _selectedCreditStatus = value);
+                        }
+                      },
                     ),
                   ),
                 ],
@@ -744,18 +773,52 @@ class _CreateLeadSheetState extends State<_CreateLeadSheet> {
               Row(
                 children: <Widget>[
                   Expanded(
-                    child: _InputField(
-                      controller: _projectStateController,
-                      label: 'Estado proyecto',
-                      hint: 'Estado',
+                    child: DropdownButtonFormField<String>(
+                      initialValue: _selectedProjectState,
+                      decoration: const InputDecoration(
+                        labelText: 'Estado proyecto',
+                      ),
+                      items: _projectStateOptions
+                          .map(
+                            (value) => DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            ),
+                          )
+                          .toList(growable: false),
+                      onChanged: (value) {
+                        if (value != null) {
+                          final cities = _projectCitiesByState[value]!;
+                          setState(() {
+                            _selectedProjectState = value;
+                            _selectedProjectCity = cities.first;
+                          });
+                        }
+                      },
                     ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: _InputField(
-                      controller: _projectCityController,
-                      label: 'Ciudad proyecto',
-                      hint: 'Ciudad',
+                    child: DropdownButtonFormField<String>(
+                      initialValue: _selectedProjectCity,
+                      decoration: const InputDecoration(
+                        labelText: 'Ciudad proyecto',
+                      ),
+                      items:
+                          (_projectCitiesByState[_selectedProjectState] ??
+                                  const <String>[])
+                              .map(
+                                (value) => DropdownMenuItem<String>(
+                                  value: value,
+                                  child: Text(value),
+                                ),
+                              )
+                              .toList(growable: false),
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() => _selectedProjectCity = value);
+                        }
+                      },
                     ),
                   ),
                 ],
@@ -764,10 +827,24 @@ class _CreateLeadSheetState extends State<_CreateLeadSheet> {
               Row(
                 children: <Widget>[
                   Expanded(
-                    child: _InputField(
-                      controller: _requiredDeliveryTimeController,
-                      label: 'Tiempo entrega',
-                      hint: 'Inmediato / 2-4 semanas',
+                    child: DropdownButtonFormField<String>(
+                      initialValue: _selectedDeliveryTime,
+                      decoration: const InputDecoration(
+                        labelText: 'Tiempo entrega',
+                      ),
+                      items: _deliveryTimeOptions
+                          .map(
+                            (value) => DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            ),
+                          )
+                          .toList(growable: false),
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() => _selectedDeliveryTime = value);
+                        }
+                      },
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -806,10 +883,22 @@ class _CreateLeadSheetState extends State<_CreateLeadSheet> {
               Row(
                 children: <Widget>[
                   Expanded(
-                    child: _InputField(
-                      controller: _sourceController,
-                      label: 'Origen',
-                      hint: 'Referido',
+                    child: DropdownButtonFormField<String>(
+                      initialValue: _selectedSource,
+                      decoration: const InputDecoration(labelText: 'Origen'),
+                      items: _leadSourceOptions
+                          .map(
+                            (value) => DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            ),
+                          )
+                          .toList(growable: false),
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() => _selectedSource = value);
+                        }
+                      },
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -1527,6 +1616,56 @@ String? _emailValidator(String? value) {
 }
 
 const _leadStatusOptions = <String>['Nuevo', 'Contactado', 'Calificado'];
+const _industrialSectorOptions = <String>[
+  'Construccion',
+  'Mineria',
+  'Energia',
+  'Hidraulica',
+  'Gas y Petroleo',
+  'Alimenticia',
+  'Manufactura',
+];
+const _creditStatusOptions = <String>['Activo', 'En tramite', 'Suspendido'];
+const _projectStateOptions = <String>[
+  'Nuevo Leon',
+  'Jalisco',
+  'Ciudad de Mexico',
+  'Estado de Mexico',
+  'Veracruz',
+  'Puebla',
+  'Queretaro',
+  'Guanajuato',
+  'Sinaloa',
+  'Baja California',
+];
+const _projectCitiesByState = <String, List<String>>{
+  'Nuevo Leon': <String>['Monterrey', 'San Nicolas', 'Apodaca'],
+  'Jalisco': <String>['Guadalajara', 'Zapopan', 'Tlaquepaque'],
+  'Ciudad de Mexico': <String>['Alvaro Obregon', 'Azcapotzalco', 'Iztapalapa'],
+  'Estado de Mexico': <String>['Toluca', 'Naucalpan', 'Tlalnepantla'],
+  'Veracruz': <String>['Veracruz', 'Coatzacoalcos', 'Poza Rica'],
+  'Puebla': <String>['Puebla', 'Tehuacan', 'San Martin Texmelucan'],
+  'Queretaro': <String>['Queretaro', 'San Juan del Rio', 'El Marques'],
+  'Guanajuato': <String>['Leon', 'Irapuato', 'Celaya'],
+  'Sinaloa': <String>['Culiacan', 'Mazatlan', 'Los Mochis'],
+  'Baja California': <String>['Tijuana', 'Mexicali', 'Ensenada'],
+};
+const _deliveryTimeOptions = <String>[
+  'Inmediato',
+  '24-72 horas',
+  '2-4 semanas',
+  '4-6 semanas',
+  '6-8 semanas',
+];
+const _leadSourceOptions = <String>[
+  'Referido',
+  'Llamada',
+  'Visita',
+  'Sitio web',
+  'WhatsApp',
+  'Correo',
+  'Licitacion',
+];
 const _taskTypeOptions = <String>[
   'Seguimiento',
   'Llamada',
