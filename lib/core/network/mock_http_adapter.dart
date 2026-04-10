@@ -35,6 +35,24 @@ class MockHttpAdapter implements HttpAdapter {
       );
     }
 
+    if (path == ApiEndpoints.catalogProducts && method == HttpMethod.get) {
+      return _dataStore.getCatalogProducts(
+        material: queryParameters?['material'] as String?,
+        valveType: queryParameters?['valve_type'] as String?,
+        standard: queryParameters?['standard'] as String?,
+        productType: queryParameters?['product_type'] as String?,
+      );
+    }
+
+    if (path == ApiEndpoints.catalogDatasheets && method == HttpMethod.get) {
+      return _dataStore.getCatalogDatasheets(
+        material: queryParameters?['material'] as String?,
+        valveType: queryParameters?['valve_type'] as String?,
+        standard: queryParameters?['standard'] as String?,
+        productType: queryParameters?['product_type'] as String?,
+      );
+    }
+
     if (path == ApiEndpoints.leads && method == HttpMethod.get) {
       return _dataStore.getLeads(status: queryParameters?['status'] as String?);
     }

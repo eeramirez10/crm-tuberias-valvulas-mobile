@@ -7,6 +7,8 @@ class MockApiDataStore {
     required List<Map<String, dynamic>> customers,
     required List<Map<String, dynamic>> leads,
     required List<Map<String, dynamic>> products,
+    required List<Map<String, dynamic>> catalogProducts,
+    required List<Map<String, dynamic>> technicalDatasheets,
     required List<Map<String, dynamic>> opportunities,
     required List<Map<String, dynamic>> quotes,
     required List<Map<String, dynamic>> orders,
@@ -15,6 +17,8 @@ class MockApiDataStore {
   }) : _customers = customers,
        _leads = leads,
        _products = products,
+       _catalogProducts = catalogProducts,
+       _technicalDatasheets = technicalDatasheets,
        _opportunities = opportunities,
        _quotes = quotes,
        _orders = orders,
@@ -222,6 +226,172 @@ class MockApiDataStore {
           'list_price': 12800.0,
           'min_price': 11500.0,
           'unit_cost': 9300.0,
+        },
+      ],
+      catalogProducts: <Map<String, dynamic>>[
+        {
+          'id': 'cat-001',
+          'sku': 'TUB-A53-S40-4',
+          'name': 'Tuberia ASTM A53 Sch 40 4"',
+          'product_type': 'Tuberia',
+          'material': 'Acero al Carbon',
+          'schedule': 'Sch 40',
+          'nominal_diameter': '4"',
+          'end_type': 'Biselado',
+          'valve_type': 'N/A',
+          'pressure_class': '150',
+          'standard': 'ASTM',
+          'manufacturer': 'Tubex',
+          'datasheet_ids': <String>['ds-001', 'ds-004'],
+        },
+        {
+          'id': 'cat-002',
+          'sku': 'TUB-INOX-S80-2',
+          'name': 'Tuberia Inoxidable Sch 80 2"',
+          'product_type': 'Tuberia',
+          'material': 'Inoxidable',
+          'schedule': 'Sch 80',
+          'nominal_diameter': '2"',
+          'end_type': 'Roscado',
+          'valve_type': 'N/A',
+          'pressure_class': '300',
+          'standard': 'ANSI',
+          'manufacturer': 'StainlessFlow',
+          'datasheet_ids': <String>['ds-002'],
+        },
+        {
+          'id': 'cat-003',
+          'sku': 'VAL-COMP-API-6',
+          'name': 'Valvula Compuerta API 6"',
+          'product_type': 'Valvula',
+          'material': 'Acero al Carbon',
+          'schedule': 'Sch 80',
+          'nominal_diameter': '6"',
+          'end_type': 'Bridado',
+          'valve_type': 'Compuerta',
+          'pressure_class': '600',
+          'standard': 'API',
+          'manufacturer': 'Valvotec',
+          'datasheet_ids': <String>['ds-003', 'ds-006'],
+        },
+        {
+          'id': 'cat-004',
+          'sku': 'VAL-BOL-ANSI-3',
+          'name': 'Valvula Bola ANSI 3"',
+          'product_type': 'Valvula',
+          'material': 'Inoxidable',
+          'schedule': 'Sch 40',
+          'nominal_diameter': '3"',
+          'end_type': 'Bridado',
+          'valve_type': 'Bola',
+          'pressure_class': '300',
+          'standard': 'ANSI',
+          'manufacturer': 'SteelMotion',
+          'datasheet_ids': <String>['ds-002', 'ds-005'],
+        },
+        {
+          'id': 'cat-005',
+          'sku': 'VAL-CHECK-ASTM-4',
+          'name': 'Valvula Check ASTM 4"',
+          'product_type': 'Valvula',
+          'material': 'Acero al Carbon',
+          'schedule': 'Sch 40',
+          'nominal_diameter': '4"',
+          'end_type': 'Bridado',
+          'valve_type': 'Check',
+          'pressure_class': '300',
+          'standard': 'ASTM',
+          'manufacturer': 'HydroValve',
+          'datasheet_ids': <String>['ds-001', 'ds-003'],
+        },
+        {
+          'id': 'cat-006',
+          'sku': 'CON-BRIDA-ANSI-8',
+          'name': 'Brida ANSI 8"',
+          'product_type': 'Conexion',
+          'material': 'Acero al Carbon',
+          'schedule': 'Sch 40',
+          'nominal_diameter': '8"',
+          'end_type': 'Bridado',
+          'valve_type': 'N/A',
+          'pressure_class': '300',
+          'standard': 'ANSI',
+          'manufacturer': 'FittingPro',
+          'datasheet_ids': <String>['ds-004'],
+        },
+      ],
+      technicalDatasheets: <Map<String, dynamic>>[
+        {
+          'id': 'ds-001',
+          'title': 'Ficha tecnica ASTM valvulas y tuberia',
+          'manufacturer': 'Tubex',
+          'file_type': 'PDF',
+          'url': 'https://docs.crm-demo.local/datasheets/ds-001.pdf',
+          'related_sku': 'TUB-A53-S40-4',
+          'material': 'Acero al Carbon',
+          'valve_type': 'N/A',
+          'standard': 'ASTM',
+          'product_type': 'Tuberia',
+        },
+        {
+          'id': 'ds-002',
+          'title': 'Manual inox ANSI',
+          'manufacturer': 'StainlessFlow',
+          'file_type': 'PDF',
+          'url': 'https://docs.crm-demo.local/datasheets/ds-002.pdf',
+          'related_sku': 'TUB-INOX-S80-2',
+          'material': 'Inoxidable',
+          'valve_type': 'Bola',
+          'standard': 'ANSI',
+          'product_type': 'Valvula',
+        },
+        {
+          'id': 'ds-003',
+          'title': 'Ficha API valvulas industriales',
+          'manufacturer': 'Valvotec',
+          'file_type': 'PDF',
+          'url': 'https://docs.crm-demo.local/datasheets/ds-003.pdf',
+          'related_sku': 'VAL-COMP-API-6',
+          'material': 'Acero al Carbon',
+          'valve_type': 'Compuerta',
+          'standard': 'API',
+          'product_type': 'Valvula',
+        },
+        {
+          'id': 'ds-004',
+          'title': 'Guia de conexiones bridado',
+          'manufacturer': 'FittingPro',
+          'file_type': 'PDF',
+          'url': 'https://docs.crm-demo.local/datasheets/ds-004.pdf',
+          'related_sku': 'CON-BRIDA-ANSI-8',
+          'material': 'Acero al Carbon',
+          'valve_type': 'N/A',
+          'standard': 'ANSI',
+          'product_type': 'Conexion',
+        },
+        {
+          'id': 'ds-005',
+          'title': 'Catalogo valvula bola inox',
+          'manufacturer': 'SteelMotion',
+          'file_type': 'PDF',
+          'url': 'https://docs.crm-demo.local/datasheets/ds-005.pdf',
+          'related_sku': 'VAL-BOL-ANSI-3',
+          'material': 'Inoxidable',
+          'valve_type': 'Bola',
+          'standard': 'ANSI',
+          'product_type': 'Valvula',
+        },
+        {
+          'id': 'ds-006',
+          'title': 'Especificacion API clase 600',
+          'manufacturer': 'Valvotec',
+          'file_type': 'PDF',
+          'url': 'https://docs.crm-demo.local/datasheets/ds-006.pdf',
+          'related_sku': 'VAL-COMP-API-6',
+          'material': 'Acero al Carbon',
+          'valve_type': 'Compuerta',
+          'standard': 'API',
+          'product_type': 'Valvula',
         },
       ],
       opportunities: <Map<String, dynamic>>[
@@ -581,6 +751,8 @@ class MockApiDataStore {
   final List<Map<String, dynamic>> _customers;
   final List<Map<String, dynamic>> _leads;
   final List<Map<String, dynamic>> _products;
+  final List<Map<String, dynamic>> _catalogProducts;
+  final List<Map<String, dynamic>> _technicalDatasheets;
   final List<Map<String, dynamic>> _opportunities;
   final List<Map<String, dynamic>> _quotes;
   final List<Map<String, dynamic>> _orders;
@@ -834,6 +1006,113 @@ class MockApiDataStore {
     }
 
     return <String, dynamic>{'items': filtered};
+  }
+
+  Map<String, dynamic> getCatalogProducts({
+    String? material,
+    String? valveType,
+    String? standard,
+    String? productType,
+  }) {
+    var filtered = _catalogProducts;
+
+    if (material != null && material.trim().isNotEmpty) {
+      final normalized = material.toLowerCase().trim();
+      filtered = filtered
+          .where(
+            (item) =>
+                (item['material'] as String? ?? '').toLowerCase() == normalized,
+          )
+          .toList(growable: false);
+    }
+
+    if (valveType != null && valveType.trim().isNotEmpty) {
+      final normalized = valveType.toLowerCase().trim();
+      filtered = filtered
+          .where(
+            (item) =>
+                (item['valve_type'] as String? ?? '').toLowerCase() ==
+                normalized,
+          )
+          .toList(growable: false);
+    }
+
+    if (standard != null && standard.trim().isNotEmpty) {
+      final normalized = standard.toLowerCase().trim();
+      filtered = filtered
+          .where(
+            (item) =>
+                (item['standard'] as String? ?? '').toLowerCase() == normalized,
+          )
+          .toList(growable: false);
+    }
+
+    if (productType != null && productType.trim().isNotEmpty) {
+      final normalized = productType.toLowerCase().trim();
+      filtered = filtered
+          .where(
+            (item) =>
+                (item['product_type'] as String? ?? '').toLowerCase() ==
+                normalized,
+          )
+          .toList(growable: false);
+    }
+
+    return <String, dynamic>{'items': filtered};
+  }
+
+  Map<String, dynamic> getCatalogDatasheets({
+    String? material,
+    String? valveType,
+    String? standard,
+    String? productType,
+  }) {
+    var filtered = _technicalDatasheets;
+
+    if (material != null && material.trim().isNotEmpty) {
+      final normalized = material.toLowerCase().trim();
+      filtered = filtered
+          .where(
+            (item) =>
+                (item['material'] as String? ?? '').toLowerCase() == normalized,
+          )
+          .toList(growable: false);
+    }
+
+    if (valveType != null && valveType.trim().isNotEmpty) {
+      final normalized = valveType.toLowerCase().trim();
+      filtered = filtered
+          .where(
+            (item) =>
+                (item['valve_type'] as String? ?? '').toLowerCase() ==
+                    normalized ||
+                (item['valve_type'] as String? ?? '').toLowerCase() == 'n/a',
+          )
+          .toList(growable: false);
+    }
+
+    if (standard != null && standard.trim().isNotEmpty) {
+      final normalized = standard.toLowerCase().trim();
+      filtered = filtered
+          .where(
+            (item) =>
+                (item['standard'] as String? ?? '').toLowerCase() == normalized,
+          )
+          .toList(growable: false);
+    }
+
+    if (productType != null && productType.trim().isNotEmpty) {
+      final normalized = productType.toLowerCase().trim();
+      filtered = filtered
+          .where(
+            (item) =>
+                (item['product_type'] as String? ?? '').toLowerCase() ==
+                normalized,
+          )
+          .toList(growable: false);
+    }
+
+    return <String, dynamic>{'items': filtered.take(4).toList(growable: false)};
   }
 
   Map<String, dynamic> getLeads({String? status}) {

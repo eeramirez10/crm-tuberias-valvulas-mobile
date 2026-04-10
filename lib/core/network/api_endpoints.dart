@@ -10,6 +10,8 @@ class ApiEndpoints {
   static const orders = '/orders';
   static const tasks = '/tasks';
   static const activities = '/activities';
+  static const catalogProducts = '/catalog/products';
+  static const catalogDatasheets = '/catalog/datasheets';
   static const aiInsights = '/ai/insights';
   static const aiNextActions = '/ai/next-actions';
   static const aiRiskSummary = '/ai/risk-summary';

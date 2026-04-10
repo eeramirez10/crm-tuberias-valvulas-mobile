@@ -12,6 +12,9 @@ import '../../../customers/presentation/providers/customers_providers.dart';
 import '../../../dashboard/presentation/providers/dashboard_providers.dart';
 import '../../../tasks/domain/entities/create_task_input.dart';
 import '../../../tasks/presentation/providers/tasks_providers.dart';
+import '../../../technical_catalog/domain/entities/catalog_product.dart';
+import '../../../technical_catalog/domain/entities/technical_datasheet.dart';
+import '../../../technical_catalog/presentation/providers/technical_catalog_providers.dart';
 import '../../domain/entities/create_opportunity_input.dart';
 import '../../domain/entities/opportunity.dart';
 import '../providers/opportunities_providers.dart';
@@ -67,6 +70,12 @@ class _PipelinePageState extends ConsumerState<PipelinePage> {
       ref.invalidate(activitiesTimelineControllerProvider);
       if (mounted) {
         AppToast.success(context, 'Deal creado: ${payload.input.title}.');
+        if (payload.datasheetsAttached > 0) {
+          AppToast.info(
+            context,
+            'Ficha(s) tecnica(s) adjuntas: ${payload.datasheetsAttached}.',
+          );
+        }
       }
     } catch (_) {
       if (mounted) {
@@ -590,21 +599,25 @@ class _PipelineInactivityAlert extends StatelessWidget {
 }
 
 class _CreateDealSheetResult {
-  const _CreateDealSheetResult({required this.input});
+  const _CreateDealSheetResult({
+    required this.input,
+    required this.datasheetsAttached,
+  });
 
   final CreateOpportunityInput input;
+  final int datasheetsAttached;
 }
 
-class _CreateDealSheet extends StatefulWidget {
+class _CreateDealSheet extends ConsumerStatefulWidget {
   const _CreateDealSheet({required this.customers});
 
   final List<Customer> customers;
 
   @override
-  State<_CreateDealSheet> createState() => _CreateDealSheetState();
+  ConsumerState<_CreateDealSheet> createState() => _CreateDealSheetState();
 }
 
-class _CreateDealSheetState extends State<_CreateDealSheet> {
+class _CreateDealSheetState extends ConsumerState<_CreateDealSheet> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _amountController = TextEditingController();
@@ -615,6 +628,14 @@ class _CreateDealSheetState extends State<_CreateDealSheet> {
   late String _selectedProjectCity;
   late String _selectedDeliveryTime;
   late String _selectedMainCompetitor;
+  late String _selectedProductType;
+  late String _selectedMaterial;
+  late String _selectedSchedule;
+  late String _selectedNominalDiameter;
+  late String _selectedEndType;
+  late String _selectedValveType;
+  late String _selectedPressureClass;
+  late String _selectedStandard;
   OpportunityStage _selectedStage = OpportunityStage.requirement;
   DateTime _expectedDate = DateTime.now().add(const Duration(days: 14));
   double _probability = 0.5;
@@ -644,6 +665,14 @@ class _CreateDealSheetState extends State<_CreateDealSheet> {
     );
     _selectedDeliveryTime = _dealDeliveryTimeOptions[2];
     _selectedMainCompetitor = _dealCompetitorOptions.first;
+    _selectedProductType = _catalogProductTypeOptions.first;
+    _selectedMaterial = _technicalMaterialOptions.first;
+    _selectedSchedule = _technicalScheduleOptions.first;
+    _selectedNominalDiameter = _technicalNominalDiameterOptions[2];
+    _selectedEndType = _technicalEndTypeOptions.first;
+    _selectedValveType = _technicalValveTypeOptions.first;
+    _selectedPressureClass = _technicalPressureClassOptions.first;
+    _selectedStandard = _technicalStandardOptions.first;
   }
 
   @override
@@ -672,13 +701,25 @@ class _CreateDealSheetState extends State<_CreateDealSheet> {
     }
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
     final amount = _parseAmount(_amountController.text);
     if (amount <= 0) {
       AppToast.info(context, 'Ingresa un monto estimado mayor a 0.');
+      return;
+    }
+
+    final datasheets = await ref.read(
+      technicalCatalogDatasheetsProvider(
+        material: _selectedMaterial,
+        valveType: _normalizedValveType(),
+        standard: _selectedStandard,
+        productType: _selectedProductType,
+      ).future,
+    );
+    if (!mounted) {
       return;
     }
 
@@ -696,7 +737,15 @@ class _CreateDealSheetState extends State<_CreateDealSheet> {
           projectCity: _selectedProjectCity,
           requiredDeliveryTime: _selectedDeliveryTime,
           mainCompetitor: _selectedMainCompetitor,
+          material: _selectedMaterial,
+          schedule: _selectedSchedule,
+          nominalDiameter: _selectedNominalDiameter,
+          endType: _selectedEndType,
+          valveType: _normalizedValveType() ?? '',
+          pressureClass: _selectedPressureClass,
+          standard: _selectedStandard,
         ),
+        datasheetsAttached: datasheets.length,
       ),
     );
   }
@@ -741,8 +790,81 @@ class _CreateDealSheetState extends State<_CreateDealSheet> {
     return cities.first;
   }
 
+  String? _normalizedValveType() {
+    if (_selectedValveType == 'N/A') {
+      return null;
+    }
+    return _selectedValveType;
+  }
+
+  void _applyAiSuggestion() {
+    switch (_selectedIndustrialSector) {
+      case 'Mineria':
+        _selectedProductType = 'Valvula';
+        _selectedMaterial = 'Acero al Carbon';
+        _selectedSchedule = 'Sch 80';
+        _selectedNominalDiameter = '6"';
+        _selectedEndType = 'Bridado';
+        _selectedValveType = 'Compuerta';
+        _selectedPressureClass = '600';
+        _selectedStandard = 'API';
+        _selectedDeliveryTime = '2-4 semanas';
+        break;
+      case 'Gas y Petroleo':
+        _selectedProductType = 'Valvula';
+        _selectedMaterial = 'Inoxidable';
+        _selectedSchedule = 'Sch 80';
+        _selectedNominalDiameter = '8"';
+        _selectedEndType = 'Bridado';
+        _selectedValveType = 'Compuerta';
+        _selectedPressureClass = '600';
+        _selectedStandard = 'API';
+        _selectedDeliveryTime = '4-6 semanas';
+        break;
+      case 'Hidraulica':
+        _selectedProductType = 'Tuberia';
+        _selectedMaterial = 'Acero al Carbon';
+        _selectedSchedule = 'Sch 40';
+        _selectedNominalDiameter = '4"';
+        _selectedEndType = 'Bridado';
+        _selectedValveType = 'Check';
+        _selectedPressureClass = '300';
+        _selectedStandard = 'ASTM';
+        _selectedDeliveryTime = '2-4 semanas';
+        break;
+      default:
+        _selectedProductType = 'Valvula';
+        _selectedMaterial = 'Acero al Carbon';
+        _selectedSchedule = 'Sch 40';
+        _selectedNominalDiameter = '3"';
+        _selectedEndType = 'Bridado';
+        _selectedValveType = 'Compuerta';
+        _selectedPressureClass = '300';
+        _selectedStandard = 'ANSI';
+        _selectedDeliveryTime = '2-4 semanas';
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final compatibleProductsState = ref.watch(
+      technicalCatalogProductsProvider(
+        material: _selectedMaterial,
+        valveType: _normalizedValveType(),
+        standard: _selectedStandard,
+        productType: _selectedProductType,
+      ),
+    );
+    final datasheetsState = ref.watch(
+      technicalCatalogDatasheetsProvider(
+        material: _selectedMaterial,
+        valveType: _normalizedValveType(),
+        standard: _selectedStandard,
+        productType: _selectedProductType,
+      ),
+    );
+
     return SafeArea(
       child: SingleChildScrollView(
         padding: EdgeInsets.fromLTRB(
@@ -1006,6 +1128,226 @@ class _CreateDealSheetState extends State<_CreateDealSheet> {
                 },
               ),
               const SizedBox(height: 10),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.panelBorder),
+                ),
+                child: Row(
+                  children: <Widget>[
+                    const Icon(Icons.auto_awesome_rounded),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Text(
+                        'Sugerencia IA mock para configuracion tecnica.',
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        setState(_applyAiSuggestion);
+                      },
+                      child: const Text('Aplicar'),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 10),
+              DropdownButtonFormField<String>(
+                isExpanded: true,
+                initialValue: _selectedProductType,
+                decoration: const InputDecoration(
+                  labelText: 'Tipo de producto',
+                ),
+                items: _catalogProductTypeOptions
+                    .map(
+                      (value) => DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      ),
+                    )
+                    .toList(growable: false),
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() => _selectedProductType = value);
+                  }
+                },
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      isExpanded: true,
+                      initialValue: _selectedMaterial,
+                      decoration: const InputDecoration(labelText: 'Material'),
+                      items: _technicalMaterialOptions
+                          .map(
+                            (value) => DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            ),
+                          )
+                          .toList(growable: false),
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() => _selectedMaterial = value);
+                        }
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      isExpanded: true,
+                      initialValue: _selectedSchedule,
+                      decoration: const InputDecoration(labelText: 'Cedula'),
+                      items: _technicalScheduleOptions
+                          .map(
+                            (value) => DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            ),
+                          )
+                          .toList(growable: false),
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() => _selectedSchedule = value);
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      isExpanded: true,
+                      initialValue: _selectedNominalDiameter,
+                      decoration: const InputDecoration(
+                        labelText: 'Diametro nominal',
+                      ),
+                      items: _technicalNominalDiameterOptions
+                          .map(
+                            (value) => DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            ),
+                          )
+                          .toList(growable: false),
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() => _selectedNominalDiameter = value);
+                        }
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      isExpanded: true,
+                      initialValue: _selectedEndType,
+                      decoration: const InputDecoration(
+                        labelText: 'Tipo extremo',
+                      ),
+                      items: _technicalEndTypeOptions
+                          .map(
+                            (value) => DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            ),
+                          )
+                          .toList(growable: false),
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() => _selectedEndType = value);
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      isExpanded: true,
+                      initialValue: _selectedValveType,
+                      decoration: const InputDecoration(
+                        labelText: 'Tipo valvula',
+                      ),
+                      items: _technicalValveTypeOptions
+                          .map(
+                            (value) => DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            ),
+                          )
+                          .toList(growable: false),
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() => _selectedValveType = value);
+                        }
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      isExpanded: true,
+                      initialValue: _selectedPressureClass,
+                      decoration: const InputDecoration(
+                        labelText: 'Clase/presion',
+                      ),
+                      items: _technicalPressureClassOptions
+                          .map(
+                            (value) => DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            ),
+                          )
+                          .toList(growable: false),
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() => _selectedPressureClass = value);
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              DropdownButtonFormField<String>(
+                isExpanded: true,
+                initialValue: _selectedStandard,
+                decoration: const InputDecoration(labelText: 'Normatividad'),
+                items: _technicalStandardOptions
+                    .map(
+                      (value) => DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      ),
+                    )
+                    .toList(growable: false),
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() => _selectedStandard = value);
+                  }
+                },
+              ),
+              const SizedBox(height: 12),
+              CardApp(
+                child: _CatalogPreviewSection(
+                  productsState: compatibleProductsState,
+                  datasheetsState: datasheetsState,
+                ),
+              ),
+              const SizedBox(height: 10),
               Row(
                 children: <Widget>[
                   Expanded(
@@ -1097,6 +1439,62 @@ class _CreateDealSheetState extends State<_CreateDealSheet> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _CatalogPreviewSection extends StatelessWidget {
+  const _CatalogPreviewSection({
+    required this.productsState,
+    required this.datasheetsState,
+  });
+
+  final AsyncValue<List<CatalogProduct>> productsState;
+  final AsyncValue<List<TechnicalDatasheet>> datasheetsState;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Text(
+          'Catalogo tecnico sugerido',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const SizedBox(height: 8),
+        productsState.when(
+          data: (items) => Text('Productos compatibles: ${items.length}'),
+          loading: () => const Text('Buscando productos compatibles...'),
+          error: (_, _) => const Text('No se pudieron cargar productos.'),
+        ),
+        const SizedBox(height: 6),
+        datasheetsState.when(
+          data: (items) {
+            if (items.isEmpty) {
+              return const Text(
+                'Sin fichas automaticas para esta combinacion tecnica.',
+              );
+            }
+            return Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: items
+                  .map(
+                    (sheet) => Chip(
+                      avatar: const Icon(
+                        Icons.picture_as_pdf_rounded,
+                        size: 18,
+                      ),
+                      label: Text(sheet.title, overflow: TextOverflow.ellipsis),
+                    ),
+                  )
+                  .toList(growable: false),
+            );
+          },
+          loading: () => const Text('Preparando fichas tecnicas...'),
+          error: (_, _) => const Text('No se pudieron cargar fichas tecnicas.'),
+        ),
+      ],
     );
   }
 }
@@ -1487,6 +1885,46 @@ const _dealCompetitorOptions = <String>[
   'Proveedor Local X',
   'Importador directo',
 ];
+
+const _catalogProductTypeOptions = <String>[
+  'Valvula',
+  'Tuberia',
+  'Conexion',
+  'Accesorio',
+];
+
+const _technicalMaterialOptions = <String>[
+  'Acero al Carbon',
+  'Inoxidable',
+  'PVC',
+  'CPVC',
+];
+
+const _technicalScheduleOptions = <String>['Sch 40', 'Sch 80', 'Sch 160'];
+
+const _technicalNominalDiameterOptions = <String>[
+  '2"',
+  '3"',
+  '4"',
+  '6"',
+  '8"',
+  '10"',
+  '12"',
+];
+
+const _technicalEndTypeOptions = <String>['Bridado', 'Roscado', 'Biselado'];
+
+const _technicalValveTypeOptions = <String>[
+  'Compuerta',
+  'Bola',
+  'Check',
+  'Mariposa',
+  'N/A',
+];
+
+const _technicalPressureClassOptions = <String>['150', '300', '600', '900'];
+
+const _technicalStandardOptions = <String>['ANSI', 'API', 'ASTM'];
 
 const _taskTypeOptions = <String>[
   'Seguimiento',
