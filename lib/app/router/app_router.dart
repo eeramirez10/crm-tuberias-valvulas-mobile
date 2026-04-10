@@ -11,6 +11,7 @@ import '../../features/dashboard/presentation/pages/dashboard_page.dart';
 import '../../features/leads/presentation/pages/lead_details_page.dart';
 import '../../features/leads/presentation/pages/leads_page.dart';
 import '../../features/opportunities/presentation/pages/pipeline_page.dart';
+import '../../features/technical_catalog/presentation/pages/technical_catalog_page.dart';
 
 part 'app_router.g.dart';
 
@@ -72,6 +73,14 @@ GoRouter appRouter(Ref ref) {
                     },
                   ),
                 ],
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: <RouteBase>[
+              GoRoute(
+                path: '/technical-catalog',
+                builder: (context, state) => const TechnicalCatalogPage(),
               ),
             ],
           ),
@@ -216,9 +225,16 @@ class _ShellScaffold extends StatelessWidget {
                   const SizedBox(height: 8),
                   _MenuTile(
                     selected: navigationShell.currentIndex == 4,
+                    icon: Icons.inventory_2_rounded,
+                    label: 'Catalogo tecnico',
+                    onTap: () => _goTo(4, context),
+                  ),
+                  const SizedBox(height: 8),
+                  _MenuTile(
+                    selected: navigationShell.currentIndex == 5,
                     icon: Icons.assignment_turned_in_rounded,
                     label: 'Seguimiento',
-                    onTap: () => _goTo(4, context),
+                    onTap: () => _goTo(5, context),
                   ),
                   const SizedBox(height: 12),
                   const Divider(height: 1),
