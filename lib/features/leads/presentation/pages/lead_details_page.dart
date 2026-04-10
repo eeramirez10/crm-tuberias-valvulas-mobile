@@ -36,12 +36,17 @@ class _LeadDetailsPageState extends ConsumerState<LeadDetailsPage> {
               ),
             );
           }
-      
+
           return Column(
             children: <Widget>[
               Container(
                 width: double.infinity,
-                padding:  EdgeInsets.fromLTRB(16,    MediaQuery.of(context).padding.top + 5, 16, 20),
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  MediaQuery.of(context).padding.top + 5,
+                  16,
+                  20,
+                ),
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
@@ -96,23 +101,17 @@ class _LeadDetailsPageState extends ConsumerState<LeadDetailsPage> {
                               children: <Widget>[
                                 Text(
                                   _leadDisplayName(lead),
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleLarge
+                                  style: Theme.of(context).textTheme.titleLarge
                                       ?.copyWith(color: AppColors.black),
                                 ),
                                 Text(
                                   _leadEmail(lead),
-                                  style: const TextStyle(
-                                    color: Colors.black87,
-                                  ),
+                                  style: const TextStyle(color: Colors.black87),
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
                                   lead.companyName,
-                                  style: const TextStyle(
-                                    color: Colors.black54,
-                                  ),
+                                  style: const TextStyle(color: Colors.black54),
                                 ),
                               ],
                             ),
@@ -143,10 +142,7 @@ class _LeadDetailsPageState extends ConsumerState<LeadDetailsPage> {
               Expanded(
                 child: Container(
                   width: double.infinity,
-                  decoration: const BoxDecoration(
-                    color: AppColors.panel,
-
-                  ),
+                  decoration: const BoxDecoration(color: AppColors.panel),
                   child: ListView(
                     padding: const EdgeInsets.all(16),
                     children: <Widget>[
@@ -214,10 +210,26 @@ class _OverviewCard extends StatelessWidget {
         _Field(label: 'Email', value: _leadEmail(lead)),
         _Field(label: 'Phone', value: _leadPhone(lead)),
         _Field(label: 'Company', value: lead.companyName),
+        if (lead.industrialSector.isNotEmpty)
+          _Field(label: 'Giro industrial', value: lead.industrialSector),
+        if (lead.creditStatus.isNotEmpty)
+          _Field(label: 'Estatus credito', value: lead.creditStatus),
+        if (lead.projectState.isNotEmpty || lead.projectCity.isNotEmpty)
+          _Field(
+            label: 'Ubicacion proyecto',
+            value:
+                '${lead.projectCity.isEmpty ? 'N/D' : lead.projectCity}, ${lead.projectState.isEmpty ? 'N/D' : lead.projectState}',
+          ),
+        if (lead.requiredDeliveryTime.isNotEmpty)
+          _Field(
+            label: 'Tiempo entrega requerido',
+            value: lead.requiredDeliveryTime,
+          ),
+        if (lead.mainCompetitor.isNotEmpty)
+          _Field(label: 'Competidor', value: lead.mainCompetitor),
         _Field(label: 'Source', value: lead.source),
         _Field(label: 'Next Action', value: lead.nextActionDate),
-        if (lead.notes.isNotEmpty)
-          _Field(label: 'Notas', value: lead.notes),
+        if (lead.notes.isNotEmpty) _Field(label: 'Notas', value: lead.notes),
       ],
     );
   }

@@ -225,8 +225,20 @@ class _OverviewCard extends StatelessWidget {
             ),
             _Field(label: 'Phone', value: customer.contactPhone),
             _Field(label: 'Company', value: customer.name),
-            _Field(label: 'Position', value: 'Compras'),
             _Field(label: 'City', value: customer.city),
+            if (customer.industrialSector.isNotEmpty)
+              _Field(
+                label: 'Giro industrial',
+                value: customer.industrialSector,
+              ),
+            if (customer.projectState.isNotEmpty ||
+                customer.projectCity.isNotEmpty)
+              _Field(
+                label: 'Ubicacion proyecto',
+                value:
+                    '${customer.projectCity.isEmpty ? 'N/D' : customer.projectCity}, ${customer.projectState.isEmpty ? 'N/D' : customer.projectState}',
+              ),
+            _Field(label: 'Estatus credito', value: customer.creditStatus),
           ],
         ),
       ),

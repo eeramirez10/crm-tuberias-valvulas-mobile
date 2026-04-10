@@ -296,7 +296,7 @@ class _StageStrip extends StatelessWidget {
               side: const BorderSide(color: AppColors.panelBorder),
               avatar: CircleAvatar(
                 backgroundColor: AppColors.yellow,
-                
+
                 child: Text(
                   '${countByStage[stage]}',
                   style: const TextStyle(
@@ -362,7 +362,7 @@ class _OpportunityCard extends StatelessWidget {
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 color: AppColors.black,
                 fontWeight: FontWeight.w900,
-                fontSize: 18
+                fontSize: 18,
               ),
             ),
           ],
@@ -473,6 +473,11 @@ class _CreateDealSheetState extends State<_CreateDealSheet> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _amountController = TextEditingController();
+  late final TextEditingController _industrialSectorController;
+  late final TextEditingController _projectStateController;
+  late final TextEditingController _projectCityController;
+  late final TextEditingController _requiredDeliveryTimeController;
+  late final TextEditingController _mainCompetitorController;
 
   late String _selectedCustomerName;
   OpportunityStage _selectedStage = OpportunityStage.requirement;
@@ -482,13 +487,36 @@ class _CreateDealSheetState extends State<_CreateDealSheet> {
   @override
   void initState() {
     super.initState();
-    _selectedCustomerName = widget.customers.first.name;
+    final firstCustomer = widget.customers.first;
+    _selectedCustomerName = firstCustomer.name;
+    _industrialSectorController = TextEditingController(
+      text: firstCustomer.industrialSector.isEmpty
+          ? firstCustomer.segment
+          : firstCustomer.industrialSector,
+    );
+    _projectStateController = TextEditingController(
+      text: firstCustomer.projectState,
+    );
+    _projectCityController = TextEditingController(
+      text: firstCustomer.projectCity.isEmpty
+          ? firstCustomer.city
+          : firstCustomer.projectCity,
+    );
+    _requiredDeliveryTimeController = TextEditingController(
+      text: '2-4 semanas',
+    );
+    _mainCompetitorController = TextEditingController();
   }
 
   @override
   void dispose() {
     _titleController.dispose();
     _amountController.dispose();
+    _industrialSectorController.dispose();
+    _projectStateController.dispose();
+    _projectCityController.dispose();
+    _requiredDeliveryTimeController.dispose();
+    _mainCompetitorController.dispose();
     super.dispose();
   }
 
@@ -530,9 +558,23 @@ class _CreateDealSheetState extends State<_CreateDealSheet> {
           amount: amount,
           probability: _probability,
           expectedCloseDate: DateFormat('yyyy-MM-dd').format(_expectedDate),
+          industrialSector: _industrialSectorController.text.trim(),
+          projectState: _projectStateController.text.trim(),
+          projectCity: _projectCityController.text.trim(),
+          requiredDeliveryTime: _requiredDeliveryTimeController.text.trim(),
+          mainCompetitor: _mainCompetitorController.text.trim(),
         ),
       ),
     );
+  }
+
+  Customer? _findCustomerByName(String name) {
+    for (final customer in widget.customers) {
+      if (customer.name == name) {
+        return customer;
+      }
+    }
+    return null;
   }
 
   @override
@@ -596,7 +638,24 @@ class _CreateDealSheetState extends State<_CreateDealSheet> {
                         ),
                       );
                       if (selected != null) {
-                        setState(() => _selectedCustomerName = selected);
+                        setState(() {
+                          _selectedCustomerName = selected;
+                          final selectedCustomer = _findCustomerByName(
+                            selected,
+                          );
+                          if (selectedCustomer != null) {
+                            _industrialSectorController.text =
+                                selectedCustomer.industrialSector.isEmpty
+                                ? selectedCustomer.segment
+                                : selectedCustomer.industrialSector;
+                            _projectStateController.text =
+                                selectedCustomer.projectState;
+                            _projectCityController.text =
+                                selectedCustomer.projectCity.isEmpty
+                                ? selectedCustomer.city
+                                : selectedCustomer.projectCity;
+                          }
+                        });
                         field.didChange(selected);
                       }
                     },
@@ -629,6 +688,62 @@ class _CreateDealSheetState extends State<_CreateDealSheet> {
                 decoration: const InputDecoration(
                   labelText: 'Titulo',
                   hintText: 'Proyecto o requerimiento',
+                ),
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: TextFormField(
+                      controller: _industrialSectorController,
+                      decoration: const InputDecoration(
+                        labelText: 'Giro industrial',
+                        hintText: 'Mineria, Energia, Construccion...',
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _projectStateController,
+                      decoration: const InputDecoration(
+                        labelText: 'Estado proyecto',
+                        hintText: 'Estado',
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: TextFormField(
+                      controller: _projectCityController,
+                      decoration: const InputDecoration(
+                        labelText: 'Ciudad proyecto',
+                        hintText: 'Ciudad',
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _requiredDeliveryTimeController,
+                      decoration: const InputDecoration(
+                        labelText: 'Tiempo entrega',
+                        hintText: 'Inmediato / 2-4 semanas',
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              TextFormField(
+                controller: _mainCompetitorController,
+                decoration: const InputDecoration(
+                  labelText: 'Competidor principal',
+                  hintText: 'Contra quien se licita',
                 ),
               ),
               const SizedBox(height: 10),

@@ -258,7 +258,8 @@ class _LeadsPageState extends ConsumerState<LeadsPage> {
                       isUpdating: _updatingLeadId == lead.id,
                       isCreatingTask: _creatingTaskLeadId == lead.id,
                       onEdit: () => _openEditLeadSheet(lead),
-                      onChangeStatus: (status) => _changeLeadStatus(lead, status),
+                      onChangeStatus: (status) =>
+                          _changeLeadStatus(lead, status),
                       onCreateTask: () => _openTaskSheet(lead),
                     ),
                   ),
@@ -356,9 +357,7 @@ class _LeadCard extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(
-                      lead.contactName.isEmpty
-                          ? lead.owner
-                          : lead.contactName,
+                      lead.contactName.isEmpty ? lead.owner : lead.contactName,
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: 2),
@@ -399,7 +398,7 @@ class _LeadCard extends ConsumerWidget {
                             style: const TextStyle(
                               color: AppColors.yellow,
                               fontWeight: FontWeight.w900,
-                              fontSize: 9
+                              fontSize: 9,
                             ),
                           ),
                           const SizedBox(width: 4),
@@ -452,7 +451,7 @@ class _LeadCard extends ConsumerWidget {
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   color: AppColors.black,
                   fontWeight: FontWeight.w900,
-                  fontSize: 15
+                  fontSize: 15,
                 ),
               ),
             ],
@@ -579,6 +578,16 @@ class _CreateLeadSheetState extends State<_CreateLeadSheet> {
   final _contactController = TextEditingController();
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
+  final _industrialSectorController = TextEditingController(
+    text: 'Construccion',
+  );
+  final _creditStatusController = TextEditingController(text: 'Activo');
+  final _projectStateController = TextEditingController();
+  final _projectCityController = TextEditingController();
+  final _requiredDeliveryTimeController = TextEditingController(
+    text: '2-4 semanas',
+  );
+  final _mainCompetitorController = TextEditingController();
   final _sourceController = TextEditingController(text: 'Referido');
   final _amountController = TextEditingController();
   final _ownerController = TextEditingController(text: 'Erick Ramirez');
@@ -594,6 +603,12 @@ class _CreateLeadSheetState extends State<_CreateLeadSheet> {
     _contactController.dispose();
     _phoneController.dispose();
     _emailController.dispose();
+    _industrialSectorController.dispose();
+    _creditStatusController.dispose();
+    _projectStateController.dispose();
+    _projectCityController.dispose();
+    _requiredDeliveryTimeController.dispose();
+    _mainCompetitorController.dispose();
     _sourceController.dispose();
     _amountController.dispose();
     _ownerController.dispose();
@@ -630,6 +645,14 @@ class _CreateLeadSheetState extends State<_CreateLeadSheet> {
       contactName: _contactController.text.trim(),
       contactPhone: _phoneController.text.trim(),
       contactEmail: _emailController.text.trim(),
+      industrialSector: _industrialSectorController.text.trim(),
+      creditStatus: _creditStatusController.text.trim(),
+      projectState: _projectStateController.text.trim(),
+      projectCity: _projectCityController.text.trim(),
+      projectLatitude: null,
+      projectLongitude: null,
+      requiredDeliveryTime: _requiredDeliveryTimeController.text.trim(),
+      mainCompetitor: _mainCompetitorController.text.trim(),
       source: _sourceController.text.trim(),
       status: _selectedStatus,
       estimatedAmount: amount,
@@ -696,6 +719,66 @@ class _CreateLeadSheetState extends State<_CreateLeadSheet> {
                 label: 'Contacto',
                 hint: 'Nombre de contacto',
                 validator: _requiredField,
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: _InputField(
+                      controller: _industrialSectorController,
+                      label: 'Giro industrial',
+                      hint: 'Mineria, Energia, Construccion...',
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _InputField(
+                      controller: _creditStatusController,
+                      label: 'Estatus credito',
+                      hint: 'Activo / Suspendido / En Tramite',
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: _InputField(
+                      controller: _projectStateController,
+                      label: 'Estado proyecto',
+                      hint: 'Estado',
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _InputField(
+                      controller: _projectCityController,
+                      label: 'Ciudad proyecto',
+                      hint: 'Ciudad',
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: _InputField(
+                      controller: _requiredDeliveryTimeController,
+                      label: 'Tiempo entrega',
+                      hint: 'Inmediato / 2-4 semanas',
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _InputField(
+                      controller: _mainCompetitorController,
+                      label: 'Competidor principal',
+                      hint: 'Contra quien se licita',
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 10),
               Row(
@@ -857,6 +940,12 @@ class _UpdateLeadSheetState extends State<_UpdateLeadSheet> {
   late final TextEditingController _contactController;
   late final TextEditingController _phoneController;
   late final TextEditingController _emailController;
+  late final TextEditingController _industrialSectorController;
+  late final TextEditingController _creditStatusController;
+  late final TextEditingController _projectStateController;
+  late final TextEditingController _projectCityController;
+  late final TextEditingController _requiredDeliveryTimeController;
+  late final TextEditingController _mainCompetitorController;
   late final TextEditingController _sourceController;
   late final TextEditingController _amountController;
   late final TextEditingController _ownerController;
@@ -876,6 +965,24 @@ class _UpdateLeadSheetState extends State<_UpdateLeadSheet> {
     );
     _phoneController = TextEditingController(text: widget.lead.contactPhone);
     _emailController = TextEditingController(text: widget.lead.contactEmail);
+    _industrialSectorController = TextEditingController(
+      text: widget.lead.industrialSector,
+    );
+    _creditStatusController = TextEditingController(
+      text: widget.lead.creditStatus,
+    );
+    _projectStateController = TextEditingController(
+      text: widget.lead.projectState,
+    );
+    _projectCityController = TextEditingController(
+      text: widget.lead.projectCity,
+    );
+    _requiredDeliveryTimeController = TextEditingController(
+      text: widget.lead.requiredDeliveryTime,
+    );
+    _mainCompetitorController = TextEditingController(
+      text: widget.lead.mainCompetitor,
+    );
     _sourceController = TextEditingController(text: widget.lead.source);
     _amountController = TextEditingController(
       text: widget.lead.estimatedAmount.toStringAsFixed(0),
@@ -897,6 +1004,12 @@ class _UpdateLeadSheetState extends State<_UpdateLeadSheet> {
     _contactController.dispose();
     _phoneController.dispose();
     _emailController.dispose();
+    _industrialSectorController.dispose();
+    _creditStatusController.dispose();
+    _projectStateController.dispose();
+    _projectCityController.dispose();
+    _requiredDeliveryTimeController.dispose();
+    _mainCompetitorController.dispose();
     _sourceController.dispose();
     _amountController.dispose();
     _ownerController.dispose();
@@ -936,6 +1049,14 @@ class _UpdateLeadSheetState extends State<_UpdateLeadSheet> {
           contactName: _contactController.text.trim(),
           contactPhone: _phoneController.text.trim(),
           contactEmail: _emailController.text.trim(),
+          industrialSector: _industrialSectorController.text.trim(),
+          creditStatus: _creditStatusController.text.trim(),
+          projectState: _projectStateController.text.trim(),
+          projectCity: _projectCityController.text.trim(),
+          projectLatitude: widget.lead.projectLatitude,
+          projectLongitude: widget.lead.projectLongitude,
+          requiredDeliveryTime: _requiredDeliveryTimeController.text.trim(),
+          mainCompetitor: _mainCompetitorController.text.trim(),
           source: _sourceController.text.trim(),
           status: _selectedStatus,
           estimatedAmount: amount,
@@ -997,6 +1118,66 @@ class _UpdateLeadSheetState extends State<_UpdateLeadSheet> {
                 label: 'Contacto',
                 hint: 'Nombre de contacto',
                 validator: _requiredField,
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: _InputField(
+                      controller: _industrialSectorController,
+                      label: 'Giro industrial',
+                      hint: 'Mineria, Energia, Construccion...',
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _InputField(
+                      controller: _creditStatusController,
+                      label: 'Estatus credito',
+                      hint: 'Activo / Suspendido / En Tramite',
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: _InputField(
+                      controller: _projectStateController,
+                      label: 'Estado proyecto',
+                      hint: 'Estado',
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _InputField(
+                      controller: _projectCityController,
+                      label: 'Ciudad proyecto',
+                      hint: 'Ciudad',
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: _InputField(
+                      controller: _requiredDeliveryTimeController,
+                      label: 'Tiempo entrega',
+                      hint: 'Inmediato / 2-4 semanas',
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _InputField(
+                      controller: _mainCompetitorController,
+                      label: 'Competidor principal',
+                      hint: 'Contra quien se licita',
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 10),
               Row(
@@ -1361,6 +1542,22 @@ UpdateLeadInput _leadToUpdateInput(Lead lead, {String? status}) {
     contactName: lead.contactName.isEmpty ? lead.owner : lead.contactName,
     contactPhone: lead.contactPhone,
     contactEmail: lead.contactEmail,
+    industrialSector: lead.industrialSector,
+    creditStatus: lead.creditStatus,
+    projectState: lead.projectState,
+    projectCity: lead.projectCity,
+    projectLatitude: lead.projectLatitude,
+    projectLongitude: lead.projectLongitude,
+    requiredDeliveryTime: lead.requiredDeliveryTime,
+    mainCompetitor: lead.mainCompetitor,
+    material: lead.material,
+    schedule: lead.schedule,
+    nominalDiameter: lead.nominalDiameter,
+    endType: lead.endType,
+    valveType: lead.valveType,
+    pressureClass: lead.pressureClass,
+    standard: lead.standard,
+    lossReason: lead.lossReason,
     source: lead.source,
     status: status ?? lead.status,
     estimatedAmount: lead.estimatedAmount,
