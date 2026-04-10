@@ -473,13 +473,13 @@ class _CreateDealSheetState extends State<_CreateDealSheet> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _amountController = TextEditingController();
-  late final TextEditingController _industrialSectorController;
-  late final TextEditingController _projectStateController;
-  late final TextEditingController _projectCityController;
-  late final TextEditingController _requiredDeliveryTimeController;
-  late final TextEditingController _mainCompetitorController;
 
   late String _selectedCustomerName;
+  late String _selectedIndustrialSector;
+  late String _selectedProjectState;
+  late String _selectedProjectCity;
+  late String _selectedDeliveryTime;
+  late String _selectedMainCompetitor;
   OpportunityStage _selectedStage = OpportunityStage.requirement;
   DateTime _expectedDate = DateTime.now().add(const Duration(days: 14));
   double _probability = 0.5;
@@ -489,34 +489,32 @@ class _CreateDealSheetState extends State<_CreateDealSheet> {
     super.initState();
     final firstCustomer = widget.customers.first;
     _selectedCustomerName = firstCustomer.name;
-    _industrialSectorController = TextEditingController(
-      text: firstCustomer.industrialSector.isEmpty
+    _selectedIndustrialSector = _matchOption(
+      options: _dealIndustrialSectorOptions,
+      value: firstCustomer.industrialSector.isEmpty
           ? firstCustomer.segment
           : firstCustomer.industrialSector,
+      fallback: _dealIndustrialSectorOptions.first,
     );
-    _projectStateController = TextEditingController(
-      text: firstCustomer.projectState,
+    _selectedProjectState = _matchOption(
+      options: _dealProjectStateOptions,
+      value: firstCustomer.projectState,
+      fallback: _dealProjectStateOptions.first,
     );
-    _projectCityController = TextEditingController(
-      text: firstCustomer.projectCity.isEmpty
+    _selectedProjectCity = _resolveProjectCity(
+      state: _selectedProjectState,
+      preferredCity: firstCustomer.projectCity.isEmpty
           ? firstCustomer.city
           : firstCustomer.projectCity,
     );
-    _requiredDeliveryTimeController = TextEditingController(
-      text: '2-4 semanas',
-    );
-    _mainCompetitorController = TextEditingController();
+    _selectedDeliveryTime = _dealDeliveryTimeOptions[2];
+    _selectedMainCompetitor = _dealCompetitorOptions.first;
   }
 
   @override
   void dispose() {
     _titleController.dispose();
     _amountController.dispose();
-    _industrialSectorController.dispose();
-    _projectStateController.dispose();
-    _projectCityController.dispose();
-    _requiredDeliveryTimeController.dispose();
-    _mainCompetitorController.dispose();
     super.dispose();
   }
 
@@ -558,11 +556,11 @@ class _CreateDealSheetState extends State<_CreateDealSheet> {
           amount: amount,
           probability: _probability,
           expectedCloseDate: DateFormat('yyyy-MM-dd').format(_expectedDate),
-          industrialSector: _industrialSectorController.text.trim(),
-          projectState: _projectStateController.text.trim(),
-          projectCity: _projectCityController.text.trim(),
-          requiredDeliveryTime: _requiredDeliveryTimeController.text.trim(),
-          mainCompetitor: _mainCompetitorController.text.trim(),
+          industrialSector: _selectedIndustrialSector,
+          projectState: _selectedProjectState,
+          projectCity: _selectedProjectCity,
+          requiredDeliveryTime: _selectedDeliveryTime,
+          mainCompetitor: _selectedMainCompetitor,
         ),
       ),
     );
@@ -575,6 +573,37 @@ class _CreateDealSheetState extends State<_CreateDealSheet> {
       }
     }
     return null;
+  }
+
+  String _matchOption({
+    required List<String> options,
+    required String? value,
+    required String fallback,
+  }) {
+    final normalized = (value ?? '').trim().toLowerCase();
+    for (final option in options) {
+      if (option.toLowerCase() == normalized) {
+        return option;
+      }
+    }
+    return fallback;
+  }
+
+  String _resolveProjectCity({
+    required String state,
+    required String? preferredCity,
+  }) {
+    final cities = _dealProjectCitiesByState[state] ?? const <String>[];
+    if (cities.isEmpty) {
+      return '';
+    }
+    final normalizedCity = (preferredCity ?? '').trim().toLowerCase();
+    for (final city in cities) {
+      if (city.toLowerCase() == normalizedCity) {
+        return city;
+      }
+    }
+    return cities.first;
   }
 
   @override
@@ -644,16 +673,25 @@ class _CreateDealSheetState extends State<_CreateDealSheet> {
                             selected,
                           );
                           if (selectedCustomer != null) {
-                            _industrialSectorController.text =
-                                selectedCustomer.industrialSector.isEmpty
-                                ? selectedCustomer.segment
-                                : selectedCustomer.industrialSector;
-                            _projectStateController.text =
-                                selectedCustomer.projectState;
-                            _projectCityController.text =
-                                selectedCustomer.projectCity.isEmpty
-                                ? selectedCustomer.city
-                                : selectedCustomer.projectCity;
+                            _selectedIndustrialSector = _matchOption(
+                              options: _dealIndustrialSectorOptions,
+                              value: selectedCustomer.industrialSector.isEmpty
+                                  ? selectedCustomer.segment
+                                  : selectedCustomer.industrialSector,
+                              fallback: _selectedIndustrialSector,
+                            );
+                            _selectedProjectState = _matchOption(
+                              options: _dealProjectStateOptions,
+                              value: selectedCustomer.projectState,
+                              fallback: _selectedProjectState,
+                            );
+                            _selectedProjectCity = _resolveProjectCity(
+                              state: _selectedProjectState,
+                              preferredCity:
+                                  selectedCustomer.projectCity.isEmpty
+                                  ? selectedCustomer.city
+                                  : selectedCustomer.projectCity,
+                            );
                           }
                         });
                         field.didChange(selected);
@@ -694,57 +732,143 @@ class _CreateDealSheetState extends State<_CreateDealSheet> {
               Row(
                 children: <Widget>[
                   Expanded(
-                    child: TextFormField(
-                      controller: _industrialSectorController,
+                    child: DropdownButtonFormField<String>(
+                      isExpanded: true,
+                      initialValue: _selectedIndustrialSector,
                       decoration: const InputDecoration(
                         labelText: 'Giro industrial',
-                        hintText: 'Mineria, Energia, Construccion...',
                       ),
+                      items: _dealIndustrialSectorOptions
+                          .map(
+                            (value) => DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            ),
+                          )
+                          .toList(growable: false),
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() => _selectedIndustrialSector = value);
+                        }
+                      },
                     ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: TextFormField(
-                      controller: _projectStateController,
+                    child: DropdownButtonFormField<String>(
+                      isExpanded: true,
+                      initialValue: _selectedProjectState,
                       decoration: const InputDecoration(
                         labelText: 'Estado proyecto',
-                        hintText: 'Estado',
                       ),
+                      items: _dealProjectStateOptions
+                          .map(
+                            (value) => DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            ),
+                          )
+                          .toList(growable: false),
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() {
+                            _selectedProjectState = value;
+                            _selectedProjectCity = _resolveProjectCity(
+                              state: value,
+                              preferredCity: null,
+                            );
+                          });
+                        }
+                      },
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 10),
-              Row(
-                children: <Widget>[
-                  Expanded(
-                    child: TextFormField(
-                      controller: _projectCityController,
-                      decoration: const InputDecoration(
-                        labelText: 'Ciudad proyecto',
-                        hintText: 'Ciudad',
-                      ),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final cityField = DropdownButtonFormField<String>(
+                    isExpanded: true,
+                    initialValue: _selectedProjectCity,
+                    decoration: const InputDecoration(
+                      labelText: 'Ciudad proyecto',
                     ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _requiredDeliveryTimeController,
-                      decoration: const InputDecoration(
-                        labelText: 'Tiempo entrega',
-                        hintText: 'Inmediato / 2-4 semanas',
-                      ),
+                    items:
+                        (_dealProjectCitiesByState[_selectedProjectState] ??
+                                const <String>[])
+                            .map(
+                              (value) => DropdownMenuItem<String>(
+                                value: value,
+                                child: Text(value),
+                              ),
+                            )
+                            .toList(growable: false),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() => _selectedProjectCity = value);
+                      }
+                    },
+                  );
+                  final deliveryField = DropdownButtonFormField<String>(
+                    isExpanded: true,
+                    initialValue: _selectedDeliveryTime,
+                    decoration: const InputDecoration(
+                      labelText: 'Tiempo entrega',
                     ),
-                  ),
-                ],
+                    items: _dealDeliveryTimeOptions
+                        .map(
+                          (value) => DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          ),
+                        )
+                        .toList(growable: false),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() => _selectedDeliveryTime = value);
+                      }
+                    },
+                  );
+
+                  if (constraints.maxWidth < 420) {
+                    return Column(
+                      children: <Widget>[
+                        cityField,
+                        const SizedBox(height: 10),
+                        deliveryField,
+                      ],
+                    );
+                  }
+
+                  return Row(
+                    children: <Widget>[
+                      Expanded(child: cityField),
+                      const SizedBox(width: 10),
+                      Expanded(child: deliveryField),
+                    ],
+                  );
+                },
               ),
               const SizedBox(height: 10),
-              TextFormField(
-                controller: _mainCompetitorController,
+              DropdownButtonFormField<String>(
+                isExpanded: true,
+                initialValue: _selectedMainCompetitor,
                 decoration: const InputDecoration(
                   labelText: 'Competidor principal',
-                  hintText: 'Contra quien se licita',
                 ),
+                items: _dealCompetitorOptions
+                    .map(
+                      (value) => DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      ),
+                    )
+                    .toList(growable: false),
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() => _selectedMainCompetitor = value);
+                  }
+                },
               ),
               const SizedBox(height: 10),
               Row(
@@ -1160,6 +1284,58 @@ const _createDealStages = <OpportunityStage>[
   OpportunityStage.requirement,
   OpportunityStage.quotation,
   OpportunityStage.negotiation,
+];
+
+const _dealIndustrialSectorOptions = <String>[
+  'Construccion',
+  'Mineria',
+  'Energia',
+  'Hidraulica',
+  'Gas y Petroleo',
+  'Alimenticia',
+  'Manufactura',
+];
+
+const _dealProjectStateOptions = <String>[
+  'Nuevo Leon',
+  'Jalisco',
+  'Ciudad de Mexico',
+  'Estado de Mexico',
+  'Veracruz',
+  'Puebla',
+  'Queretaro',
+  'Guanajuato',
+  'Sinaloa',
+  'Baja California',
+];
+
+const _dealProjectCitiesByState = <String, List<String>>{
+  'Nuevo Leon': <String>['Monterrey', 'San Nicolas', 'Apodaca'],
+  'Jalisco': <String>['Guadalajara', 'Zapopan', 'Tlaquepaque'],
+  'Ciudad de Mexico': <String>['Alvaro Obregon', 'Azcapotzalco', 'Iztapalapa'],
+  'Estado de Mexico': <String>['Toluca', 'Naucalpan', 'Tlalnepantla'],
+  'Veracruz': <String>['Veracruz', 'Coatzacoalcos', 'Poza Rica'],
+  'Puebla': <String>['Puebla', 'Tehuacan', 'San Martin Texmelucan'],
+  'Queretaro': <String>['Queretaro', 'San Juan del Rio', 'El Marques'],
+  'Guanajuato': <String>['Leon', 'Irapuato', 'Celaya'],
+  'Sinaloa': <String>['Culiacan', 'Mazatlan', 'Los Mochis'],
+  'Baja California': <String>['Tijuana', 'Mexicali', 'Ensenada'],
+};
+
+const _dealDeliveryTimeOptions = <String>[
+  'Inmediato',
+  '24-72 horas',
+  '2-4 semanas',
+  '4-6 semanas',
+  '6-8 semanas',
+];
+
+const _dealCompetitorOptions = <String>[
+  'Sin definir',
+  'Distribuidora del Norte',
+  'Aceros del Pacifico',
+  'Proveedor Local X',
+  'Importador directo',
 ];
 
 const _taskTypeOptions = <String>[
