@@ -1,47 +1,49 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/design_system/app_colors.dart';
+
 class CompaniesPage extends StatelessWidget {
   const CompaniesPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    const headerColor = Color(0xFF64737D);
-    const bodyColor = Color(0xFFF0F1F3);
+    const headerColor = AppColors.blackSoft;
+    const bodyColor = Color(0xFFF4F4F4);
     final companies = <_CompanyItem>[
       const _CompanyItem(
         name: 'ABC Corp',
-        subtitle: 'Main User · Contact',
-        icon: Icons.account_tree_rounded,
-        iconColor: Color(0xFFC03995),
+        subtitle: 'Usuario principal · Contacto',
+        icon: Icons.apartment_rounded,
+        iconColor: AppColors.black,
       ),
       const _CompanyItem(
-        name: 'Logging Adventures',
-        subtitle: 'Main User',
-        icon: Icons.hexagon_rounded,
-        iconColor: Color(0xFFF6A72E),
+        name: 'Logging Ventures',
+        subtitle: 'Usuario principal',
+        icon: Icons.hub_rounded,
+        iconColor: AppColors.black,
       ),
       const _CompanyItem(
         name: 'Madeup Company',
-        subtitle: 'User 2',
-        icon: Icons.tune_rounded,
-        iconColor: Color(0xFFF39C12),
+        subtitle: 'Usuario 2',
+        icon: Icons.stacked_line_chart_rounded,
+        iconColor: AppColors.black,
       ),
       const _CompanyItem(
         name: 'New Corp',
-        subtitle: 'User 2',
+        subtitle: 'Usuario 2',
         icon: Icons.lightbulb_rounded,
-        iconColor: Color(0xFFE74C3C),
+        iconColor: AppColors.black,
       ),
       const _CompanyItem(
         name: 'XYZ Limited',
-        subtitle: 'Main User',
-        icon: Icons.tv_rounded,
-        iconColor: Color(0xFF7D3CDB),
+        subtitle: 'Usuario principal',
+        icon: Icons.videocam_rounded,
+        iconColor: AppColors.black,
       ),
     ];
 
     return Scaffold(
-      backgroundColor: bodyColor,
+      backgroundColor: AppColors.black,
       body: SafeArea(
         bottom: false,
         child: Column(
@@ -58,7 +60,7 @@ class CompaniesPage extends StatelessWidget {
                           return IconButton(
                             onPressed: () => Scaffold.of(context).openDrawer(),
                             icon: const Icon(Icons.menu_rounded),
-                            color: Colors.white,
+                            color: AppColors.yellow,
                           );
                         },
                       ),
@@ -67,11 +69,11 @@ class CompaniesPage extends StatelessWidget {
                   const SizedBox(height: 4),
                   Row(
                     children: <Widget>[
-                      const Expanded(
+                      Expanded(
                         child: Text(
-                          'All Companies',
+                          'Empresas',
                           style: TextStyle(
-                            color: Colors.white,
+                            color: AppColors.textOnDark,
                             fontSize: 40 * 0.86,
                             fontWeight: FontWeight.w700,
                           ),
@@ -79,8 +81,8 @@ class CompaniesPage extends StatelessWidget {
                       ),
                       FilledButton.icon(
                         style: FilledButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: const Color(0xFF5D6870),
+                          backgroundColor: AppColors.yellow,
+                          foregroundColor: AppColors.black,
                           visualDensity: VisualDensity.compact,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(30),
@@ -88,8 +90,8 @@ class CompaniesPage extends StatelessWidget {
                         ),
                         onPressed: () {},
                         icon: const Icon(Icons.add_rounded, size: 18),
-                        label: const Text(
-                          'New Company',
+                        label: Text(
+                          'Nueva empresa',
                           style: TextStyle(fontWeight: FontWeight.w700),
                         ),
                       ),
@@ -103,14 +105,14 @@ class CompaniesPage extends StatelessWidget {
                           decoration: InputDecoration(
                             isDense: true,
                             filled: true,
-                            fillColor: Colors.white.withValues(alpha: 0.16),
+                            fillColor: Colors.white.withValues(alpha: 0.08),
                             hintText: 'Buscar',
                             hintStyle: TextStyle(
                               color: Colors.white.withValues(alpha: 0.82),
                             ),
-                            prefixIcon: const Icon(
+                            prefixIcon: Icon(
                               Icons.search_rounded,
-                              color: Colors.white,
+                              color: Colors.white.withValues(alpha: 0.9),
                             ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10),
@@ -129,12 +131,12 @@ class CompaniesPage extends StatelessWidget {
                         width: 38,
                         height: 38,
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.16),
+                          color: Colors.white.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.filter_list_rounded,
-                          color: Colors.white,
+                          color: Colors.white.withValues(alpha: 0.9),
                         ),
                       ),
                     ],
@@ -143,64 +145,75 @@ class CompaniesPage extends StatelessWidget {
               ),
             ),
             Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-                itemCount: companies.length,
-                itemBuilder: (context, index) {
-                  final company = companies[index];
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 10),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE7E8EA),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Row(
-                      children: <Widget>[
-                        Container(
-                          width: 42,
-                          height: 42,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                            color: Colors.white,
+              child: Container(
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  color: bodyColor,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                ),
+                child: ListView.builder(
+                  padding: const EdgeInsets.fromLTRB(14, 14, 14, 18),
+                  itemCount: companies.length,
+                  itemBuilder: (context, index) {
+                    final company = companies[index];
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: const Color(0xFFE7E7E7)),
+                      ),
+                      child: Row(
+                        children: <Widget>[
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              color: AppColors.yellowSoft,
+                            ),
+                            child: Icon(company.icon, color: company.iconColor),
                           ),
-                          child: Icon(company.icon, color: company.iconColor),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: <Widget>[
-                              Text(
-                                company.name,
-                                style: const TextStyle(
-                                  fontSize: 25 * 0.86,
-                                  fontWeight: FontWeight.w700,
-                                  color: Color(0xFF242628),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                Text(
+                                  company.name,
+                                  style: const TextStyle(
+                                    fontSize: 25 * 0.86,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF242628),
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                company.subtitle,
-                                style: const TextStyle(
-                                  color: Color(0xFF6C6E72),
-                                  fontSize: 15,
+                                const SizedBox(height: 2),
+                                Text(
+                                  company.subtitle,
+                                  style: const TextStyle(
+                                    color: Color(0xFF6C6E72),
+                                    fontSize: 15,
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                        IconButton(
-                          onPressed: () {},
-                          icon: const Icon(Icons.more_horiz_rounded),
-                        ),
-                      ],
-                    ),
-                  );
-                },
+                          IconButton(
+                            onPressed: () {},
+                            icon: const Icon(
+                              Icons.more_horiz_rounded,
+                              color: Color(0xFF3A3A3A),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
           ],

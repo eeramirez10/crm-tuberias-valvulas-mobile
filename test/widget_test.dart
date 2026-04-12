@@ -7,7 +7,7 @@ void main() {
     await tester.pumpWidget(const ProviderScope(child: CrmDemoApp()));
     await tester.pumpAndSettle();
 
-    expect(find.text('All Companies'), findsOneWidget);
-    expect(find.text('New Company'), findsOneWidget);
+    expect(find.text('Empresas'), findsOneWidget);
+    expect(find.text('Nueva empresa'), findsOneWidget);
   });
 }

@@ -69,7 +69,7 @@ class _ShellScaffold extends StatelessWidget {
       backgroundColor: AppColors.black,
       drawer: Drawer(
         width: MediaQuery.sizeOf(context).width * 0.83,
-        backgroundColor: AppColors.panel,
+        backgroundColor: AppColors.blackSoft,
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.only(
             topRight: Radius.circular(20),
@@ -144,7 +144,9 @@ class _ShellScaffold extends StatelessWidget {
                 children: <Widget>[
                   Text(
                     'Navegacion',
-                    style: Theme.of(context).textTheme.titleMedium,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: AppColors.textOnDark,
+                    ),
                   ),
                   const SizedBox(height: 10),
                   _MenuTile(
@@ -168,20 +170,26 @@ class _ShellScaffold extends StatelessWidget {
                     onTap: () => _goTo(2, context),
                   ),
                   const SizedBox(height: 12),
-                  const Divider(height: 1),
+                  const Divider(height: 1, color: Colors.white24),
                   const SizedBox(height: 10),
                   const ListTile(
                     dense: true,
-                    leading: Icon(Icons.info_outline),
-                    title: Text('CRM v1.0.0'),
-                    subtitle: Text('Demo amarillo/negro'),
+                    leading: Icon(Icons.info_outline, color: AppColors.yellow),
+                    title: Text(
+                      'CRM v1.0.0',
+                      style: TextStyle(color: AppColors.textOnDark),
+                    ),
+                    subtitle: Text(
+                      'Tema Tuvansa',
+                      style: TextStyle(color: Colors.white60),
+                    ),
                   ),
                   const SizedBox(height: 8),
                   OutlinedButton.icon(
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size(double.infinity, 48),
-                      foregroundColor: AppColors.black,
-                      side: const BorderSide(color: AppColors.black),
+                      foregroundColor: AppColors.yellow,
+                      side: const BorderSide(color: AppColors.yellow),
                     ),
                     onPressed: () {
                       Navigator.of(context).pop();
@@ -231,24 +239,27 @@ class _MenuTile extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: selected
                       ? AppColors.black
-                      : AppColors.yellow.withValues(alpha: 0.16),
+                      : AppColors.yellow.withValues(alpha: 0.14),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Icon(
                   icon,
-                  color: selected ? AppColors.yellow : AppColors.black,
+                  color: selected ? AppColors.yellow : AppColors.yellow,
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   label,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleMedium?.copyWith(color: AppColors.black),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: selected ? AppColors.black : AppColors.textOnDark,
+                  ),
                 ),
               ),
-              const Icon(Icons.chevron_right_rounded, color: AppColors.black),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: selected ? AppColors.black : AppColors.yellow,
+              ),
             ],
           ),
         ),
