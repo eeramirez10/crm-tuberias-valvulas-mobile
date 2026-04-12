@@ -4,21 +4,16 @@ import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/design_system/app_colors.dart';
-import '../../features/activities/presentation/pages/commercial_history_page.dart';
-import '../../features/customers/presentation/pages/customer_details_page.dart';
-import '../../features/customers/presentation/pages/customers_page.dart';
-import '../../features/dashboard/presentation/pages/dashboard_page.dart';
-import '../../features/leads/presentation/pages/lead_details_page.dart';
-import '../../features/leads/presentation/pages/leads_page.dart';
-import '../../features/opportunities/presentation/pages/pipeline_page.dart';
-import '../../features/technical_catalog/presentation/pages/technical_catalog_page.dart';
+import '../../features/companies/presentation/pages/companies_page.dart';
+import '../../features/contacts/presentation/pages/contacts_page.dart';
+import '../../features/users/presentation/pages/users_page.dart';
 
 part 'app_router.g.dart';
 
 @Riverpod(keepAlive: true)
 GoRouter appRouter(Ref ref) {
   return GoRouter(
-    initialLocation: '/dashboard',
+    initialLocation: '/empresas',
     routes: <RouteBase>[
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
@@ -28,67 +23,24 @@ GoRouter appRouter(Ref ref) {
           StatefulShellBranch(
             routes: <RouteBase>[
               GoRoute(
-                path: '/dashboard',
-                builder: (context, state) => const DashboardPage(),
+                path: '/empresas',
+                builder: (context, state) => const CompaniesPage(),
               ),
             ],
           ),
           StatefulShellBranch(
             routes: <RouteBase>[
               GoRoute(
-                path: '/leads',
-                builder: (context, state) => const LeadsPage(),
-                routes: <RouteBase>[
-                  GoRoute(
-                    path: ':leadId',
-                    builder: (context, state) {
-                      final leadId = state.pathParameters['leadId'] ?? '';
-                      return LeadDetailsPage(leadId: leadId);
-                    },
-                  ),
-                ],
+                path: '/contactos',
+                builder: (context, state) => const ContactsPage(),
               ),
             ],
           ),
           StatefulShellBranch(
             routes: <RouteBase>[
               GoRoute(
-                path: '/pipeline',
-                builder: (context, state) => const PipelinePage(),
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: <RouteBase>[
-              GoRoute(
-                path: '/customers',
-                builder: (context, state) => const CustomersPage(),
-                routes: <RouteBase>[
-                  GoRoute(
-                    path: ':customerId',
-                    builder: (context, state) {
-                      final customerId =
-                          state.pathParameters['customerId'] ?? '';
-                      return CustomerDetailsPage(customerId: customerId);
-                    },
-                  ),
-                ],
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: <RouteBase>[
-              GoRoute(
-                path: '/technical-catalog',
-                builder: (context, state) => const TechnicalCatalogPage(),
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: <RouteBase>[
-              GoRoute(
-                path: '/history',
-                builder: (context, state) => const CommercialHistoryPage(),
+                path: '/usuarios',
+                builder: (context, state) => const UsersPage(),
               ),
             ],
           ),
@@ -197,44 +149,23 @@ class _ShellScaffold extends StatelessWidget {
                   const SizedBox(height: 10),
                   _MenuTile(
                     selected: navigationShell.currentIndex == 0,
-                    icon: Icons.dashboard_rounded,
-                    label: 'Dashboard',
+                    icon: Icons.apartment_rounded,
+                    label: 'Empresas',
                     onTap: () => _goTo(0, context),
                   ),
                   const SizedBox(height: 8),
                   _MenuTile(
                     selected: navigationShell.currentIndex == 1,
-                    icon: Icons.trending_up_rounded,
-                    label: 'Prospectos',
+                    icon: Icons.contact_phone_rounded,
+                    label: 'Contactos',
                     onTap: () => _goTo(1, context),
                   ),
                   const SizedBox(height: 8),
                   _MenuTile(
                     selected: navigationShell.currentIndex == 2,
-                    icon: Icons.handshake_rounded,
-                    label: 'Pipeline',
+                    icon: Icons.group_rounded,
+                    label: 'Usuarios',
                     onTap: () => _goTo(2, context),
-                  ),
-                  const SizedBox(height: 8),
-                  _MenuTile(
-                    selected: navigationShell.currentIndex == 3,
-                    icon: Icons.business_rounded,
-                    label: 'Clientes',
-                    onTap: () => _goTo(3, context),
-                  ),
-                  const SizedBox(height: 8),
-                  _MenuTile(
-                    selected: navigationShell.currentIndex == 4,
-                    icon: Icons.inventory_2_rounded,
-                    label: 'Catalogo tecnico',
-                    onTap: () => _goTo(4, context),
-                  ),
-                  const SizedBox(height: 8),
-                  _MenuTile(
-                    selected: navigationShell.currentIndex == 5,
-                    icon: Icons.assignment_turned_in_rounded,
-                    label: 'Seguimiento',
-                    onTap: () => _goTo(5, context),
                   ),
                   const SizedBox(height: 12),
                   const Divider(height: 1),

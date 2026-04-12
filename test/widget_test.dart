@@ -3,13 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('muestra dashboard con estilo nuevo', (
-    WidgetTester tester,
-  ) async {
+  testWidgets('muestra vista inicial de empresas', (WidgetTester tester) async {
     await tester.pumpWidget(const ProviderScope(child: CrmDemoApp()));
     await tester.pumpAndSettle();
 
-    expect(find.text('Dashboard'), findsWidgets);
-    expect(find.text('Bienvenido de vuelta'), findsOneWidget);
+    expect(find.text('All Companies'), findsOneWidget);
+    expect(find.text('New Company'), findsOneWidget);
   });
 }
