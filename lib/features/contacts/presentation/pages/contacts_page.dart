@@ -1,36 +1,70 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/design_system/app_colors.dart';
+
 class ContactsPage extends StatelessWidget {
   const ContactsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF0F1F3),
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: const <Widget>[
-            Text(
-              'Contactos',
-              style: TextStyle(
-                fontSize: 30,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF2A2C2F),
+    return ColoredBox(
+      color: AppColors.black,
+      child: SafeArea(
+        bottom: false,
+        child: Column(
+          children: <Widget>[
+            Container(
+              width: double.infinity,
+              color: AppColors.blackSoft,
+              padding: const EdgeInsets.fromLTRB(14, 10, 14, 18),
+              child: Row(
+                children: <Widget>[
+                  Builder(
+                    builder: (context) {
+                      return IconButton(
+                        onPressed: () => Scaffold.of(context).openDrawer(),
+                        icon: const Icon(Icons.menu_rounded),
+                        color: AppColors.yellow,
+                      );
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Contactos',
+                    style: TextStyle(
+                      color: AppColors.textOnDark,
+                      fontSize: 30,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
               ),
             ),
-            SizedBox(height: 10),
-            _SimpleCard(
-              title: 'Carlos Mendez',
-              subtitle: 'ABC Corp · carlos@abccorp.com',
-            ),
-            _SimpleCard(
-              title: 'Laura Salinas',
-              subtitle: 'Logging Adventures · laura@logging.com',
-            ),
-            _SimpleCard(
-              title: 'Diego Carranza',
-              subtitle: 'XYZ Limited · diego@xyz.com',
+            Expanded(
+              child: Container(
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFF4F4F4),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                ),
+                child: ListView(
+                  padding: const EdgeInsets.all(16),
+                  children: const <Widget>[
+                    _SimpleCard(
+                      title: 'Carlos Mendez',
+                      subtitle: 'ABC Corp · carlos@abccorp.com',
+                    ),
+                    _SimpleCard(
+                      title: 'Laura Salinas',
+                      subtitle: 'Logging Adventures · laura@logging.com',
+                    ),
+                    _SimpleCard(
+                      title: 'Diego Carranza',
+                      subtitle: 'XYZ Limited · diego@xyz.com',
+                    ),
+                  ],
+                ),
+              ),
             ),
           ],
         ),

@@ -42,9 +42,9 @@ class CompaniesPage extends StatelessWidget {
       ),
     ];
 
-    return Scaffold(
-      backgroundColor: AppColors.black,
-      body: SafeArea(
+    return ColoredBox(
+      color: AppColors.black,
+      child: SafeArea(
         bottom: false,
         child: Column(
           children: <Widget>[
@@ -90,7 +90,7 @@ class CompaniesPage extends StatelessWidget {
                         ),
                         onPressed: () {},
                         icon: const Icon(Icons.add_rounded, size: 18),
-                        label: Text(
+                        label: const Text(
                           'Nueva empresa',
                           style: TextStyle(fontWeight: FontWeight.w700),
                         ),
