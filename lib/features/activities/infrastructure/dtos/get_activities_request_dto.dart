@@ -1,3 +1,0 @@
-class GetActivitiesRequestDto {
-  const GetActivitiesRequestDto();
-}
